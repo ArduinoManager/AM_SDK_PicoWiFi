@@ -26,6 +26,7 @@ target_link_libraries(
     hardware_rtc INTERFACE
     pico_aon_timer INTERFACE
     no-OS-FatFS-SD-SDIO-SPI-RPi-Pico INTERFACE
+    pico_cyw43_arch_lwip_threadsafe_background INTERFACE
 )
 
 target_compile_definitions(AM_PicoWiFi INTERFACE
