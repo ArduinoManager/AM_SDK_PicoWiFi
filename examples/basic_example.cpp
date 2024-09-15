@@ -118,6 +118,8 @@ void processAlarms(char *alarmId)
 
 void initializeLogFiles()
 {
+     printf("---- Initialize Log Files --------\n");
+     
     if (am_controller.log_size("SdLog") > 2000)
     {        
         am_controller.log_purge_data("SdLog");
