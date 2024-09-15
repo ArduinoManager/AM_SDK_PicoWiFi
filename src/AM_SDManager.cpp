@@ -416,6 +416,8 @@ void SDManager::sd_send_log_data(const char *value)
     if (fr != FR_OK)
     {
         DEBUG_printf("Error opening file : %s (%d)\n", FRESULT_str(fr), fr);
+        pico->write_message(value, "");
+        f_unmount("");
         return;
     }
 
