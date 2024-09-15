@@ -1,7 +1,5 @@
 add_library(AM_PicoWiFi INTERFACE)
 
-#pico_generate_pio_header(no-OS-FatFS-SD-SDIO-SPI-RPi-Pico ${CMAKE_CURRENT_LIST_DIR}/sd_driver/SDIO/rp2040_sdio.pio)
-
 target_compile_definitions(AM_PicoWiFi INTERFACE
     picow_tcpip_server_background1
     PICO_MAX_SHARED_IRQ_HANDLERS=8u
@@ -31,5 +29,5 @@ target_link_libraries(
 )
 
 target_compile_definitions(AM_PicoWiFi INTERFACE
-    #DEBUG    
+    #DEBUG   // Uncomment this line to debug the library
 )
