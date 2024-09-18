@@ -31,6 +31,9 @@
 
 #include "lwip/tcp.h"
 
+#define HIGH 1
+#define LOW 0
+
 #ifdef DEBUG
 #define DEBUG_printf printf
 #else
@@ -43,7 +46,6 @@
 #define VARIABLELEN 14
 #define VALUELEN 14
 
-// class AM_PicoWiFi; // This is useful
 class SDManager;
 
 typedef struct TCP_SERVER_T_
