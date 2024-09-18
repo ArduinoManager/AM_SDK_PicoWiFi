@@ -413,7 +413,7 @@ err_t AMController::tcp_server_sent(void *arg, struct tcp_pcb *tpcb, u16_t len)
    TCP_SERVER_T *state = &pico->state;
 
    DEBUG_printf("tcp_server_sent %u\n", len);
-   state->buffer_to_send[0] = 0;
+   //state->buffer_to_send[0] = 0;
    return ERR_OK;
 }
 
@@ -457,7 +457,7 @@ err_t AMController::tcp_server_poll(void *arg, struct tcp_pcb *tpcb)
 {
    AMController *pico = (AMController *)arg;
    TCP_SERVER_T *state = &pico->state;
-   DEBUG_printf("tcp_server_poll_fn\n");
+   //DEBUG_printf("tcp_server_poll_fn\n");
 
    tcp_server_send_data(arg, state->client_pcb);
 
@@ -473,7 +473,7 @@ err_t AMController::tcp_server_send_data(void *arg, struct tcp_pcb *tpcb)
 
    if (len == 0)
    {
-      DEBUG_printf("\tNothing to send\n");
+      //DEBUG_printf("\tNothing to send\n");
       return ERR_OK;
    }
 
@@ -494,6 +494,9 @@ err_t AMController::tcp_server_send_data(void *arg, struct tcp_pcb *tpcb)
       // return tcp_server_result(arg, err);
       return err;
    }
+   tcp_output(tpcb);
+
+   state->buffer_to_send[0] = 0;
    return ERR_OK;
 }
 
