@@ -96,6 +96,7 @@ void AMController::init(
    // Setup the TCP server
 
    state.is_device_connected = false;
+   state.is_sync_completed = false;
    if (!tcp_server_open(&state, port))
    {
       DEBUG_printf("TCPIP Server not opened\n");
@@ -105,7 +106,7 @@ void AMController::init(
    while (true)
    {
       doWork();
-      if (state.is_device_connected)
+      if (state.is_device_connected & state.is_sync_completed)
       {
          processOutgoingMessages();
       }
@@ -144,6 +145,13 @@ void AMController::write_message(const char *variable, int value)
    char buffer[VARIABLELEN + VALUELEN + 3];
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%d#", variable, value);
+
+   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE)
+   {
+      DEBUG_printf("Message Discarded\n");
+      return;
+   }
+
    strncat(state.buffer_to_send, buffer, BUF_SIZE - 1);
 }
 
@@ -157,6 +165,14 @@ void AMController::write_message(const char *variable, long value)
    char buffer[VARIABLELEN + VALUELEN + 3];
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%ld#", variable, value);
+
+   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE)
+   {
+      DEBUG_printf("Message Discarded\n");
+      return;
+   }
+
+   printf(">>>>>%s<\n",state.buffer_to_send);
    strncat(state.buffer_to_send, buffer, BUF_SIZE - 1);
 }
 
@@ -170,6 +186,14 @@ void AMController::write_message(const char *variable, unsigned long value)
    char buffer[VARIABLELEN + VALUELEN + 3];
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%lu#", variable, value);
+
+   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE)
+   {
+      DEBUG_printf("Message Discarded\n");
+      return;
+   }
+
+printf(">>>>>%s<\n",state.buffer_to_send);
    strncat(state.buffer_to_send, buffer, BUF_SIZE - 1);
 }
 
@@ -183,6 +207,14 @@ void AMController::write_message(const char *variable, float value)
    char buffer[VARIABLELEN + VALUELEN + 3];
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%.3f#", variable, value);
+
+   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE)
+   {
+      DEBUG_printf("Message Discarded\n");
+      return;
+   }
+
+printf(">>>>>%s<\n",state.buffer_to_send);
    strncat(state.buffer_to_send, buffer, BUF_SIZE - 1);
 }
 
@@ -212,6 +244,14 @@ void AMController::write_message(const char *variable, const char *value)
    char buffer[BUF_SIZE];
 
    snprintf(buffer, BUF_SIZE, "%s=%s#", variable, value);
+
+   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE)
+   {
+      DEBUG_printf("Message Discarded\n");
+      return;
+   }
+
+printf(">>>>>%s<\n",state.buffer_to_send);
    strncat(state.buffer_to_send, buffer, BUF_SIZE - 1);
 }
 
@@ -399,6 +439,7 @@ err_t AMController::tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err
    tcp_err(client_pcb, tcp_server_err);
 
    state->is_device_connected = true;
+   state->is_sync_completed = false;
    if (pico->deviceConnected != NULL)
    {
       pico->deviceConnected();
@@ -412,8 +453,8 @@ err_t AMController::tcp_server_sent(void *arg, struct tcp_pcb *tpcb, u16_t len)
    AMController *pico = (AMController *)arg;
    TCP_SERVER_T *state = &pico->state;
 
-   DEBUG_printf("tcp_server_sent %u\n", len);
-   //state->buffer_to_send[0] = 0;
+   printf("tcp_server_sent %u\n", len);
+   // state->buffer_to_send[0] = 0;
    return ERR_OK;
 }
 
@@ -457,7 +498,7 @@ err_t AMController::tcp_server_poll(void *arg, struct tcp_pcb *tpcb)
 {
    AMController *pico = (AMController *)arg;
    TCP_SERVER_T *state = &pico->state;
-   //DEBUG_printf("tcp_server_poll_fn\n");
+   // DEBUG_printf("tcp_server_poll_fn\n");
 
    tcp_server_send_data(arg, state->client_pcb);
 
@@ -473,7 +514,7 @@ err_t AMController::tcp_server_send_data(void *arg, struct tcp_pcb *tpcb)
 
    if (len == 0)
    {
-      //DEBUG_printf("\tNothing to send\n");
+      // DEBUG_printf("\tNothing to send\n");
       return ERR_OK;
    }
 
@@ -483,6 +524,12 @@ err_t AMController::tcp_server_send_data(void *arg, struct tcp_pcb *tpcb)
    //  can use this method to cause an assertion in debug mode, if this method is called when
    //  cyw43_arch_lwip_begin IS needed
    cyw43_arch_lwip_check();
+
+   if (tcp_sndbuf(tpcb) < len)
+   {
+      printf("Not enough buffer space to send data.\n");
+      return ERR_MEM; // Return memory error
+   }
 
    err_t err = tcp_write(tpcb, state->buffer_to_send, len, TCP_WRITE_FLAG_COPY);
    if (err != ERR_OK)
@@ -494,9 +541,33 @@ err_t AMController::tcp_server_send_data(void *arg, struct tcp_pcb *tpcb)
       // return tcp_server_result(arg, err);
       return err;
    }
-   tcp_output(tpcb);
+
+   int retries = 0;
+
+   while (retries < 20)
+   {
+      err = tcp_output(tpcb);
+      if (err == ERR_OK)
+      {
+         break;
+      }
+      else
+      {
+         retries += 1;
+
+         // printf("tcp_output failed with error: %d\n", err);
+         // exit(-1);
+      }
+   }
+
+   if (retries == 20)
+   {
+      printf("tcp_output failed with error: %d\n", err);
+      exit(-1);
+   }
 
    state->buffer_to_send[0] = 0;
+
    return ERR_OK;
 }
 
@@ -509,6 +580,7 @@ void AMController::tcp_server_err(void *arg, err_t err)
    {
       DEBUG_printf("Device Disconnected\n", err);
       state->is_device_connected = false;
+      state->buffer_to_send[0]=0;
       if (pico->deviceDisconnected != NULL)
       {
          pico->deviceDisconnected();
@@ -519,6 +591,7 @@ void AMController::tcp_server_err(void *arg, err_t err)
    {
       DEBUG_printf("Device Disconnected\n", err);
       state->is_device_connected = false;
+      state->buffer_to_send[0]=0;
       if (pico->deviceDisconnected != NULL)
       {
          pico->deviceDisconnected();
@@ -615,6 +688,7 @@ void AMController::processBuffer(char *buffer, int len)
          {
             // Process sync messages for the variable in value field
             doSync();
+            state.is_sync_completed = true;
          }
          else if (
              (strcmp(variable, "$AlarmId$") == 0 || strcmp(variable, "$AlarmT$") == 0 || strcmp(variable, "$AlarmR$") == 0) &&

@@ -57,6 +57,7 @@ typedef struct TCP_SERVER_T_
     int sent_len;
     int recv_len;
     bool is_device_connected;
+    bool is_sync_completed;
 
 } TCP_SERVER_T;
 
