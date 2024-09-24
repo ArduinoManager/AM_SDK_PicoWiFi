@@ -142,7 +142,7 @@ public:
     unsigned long log_size(const char *variable);
     void log_purge_data(const char *variable);
 
-    void processBuffer(char *buffer, int len);
+    void process_received_buffer(char *buffer);
 };
 
 #endif

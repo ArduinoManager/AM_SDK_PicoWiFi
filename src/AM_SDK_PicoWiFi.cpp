@@ -146,13 +146,21 @@ void AMController::write_message(const char *variable, int value)
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%d#", variable, value);
 
-   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE)
+   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
    {
       DEBUG_printf("Message Discarded\n");
       return;
    }
 
-   strncat(state.buffer_to_send, buffer, BUF_SIZE - 1);
+   strncat(state.buffer_to_send, buffer, VARIABLELEN + VALUELEN + 2);
+
+   size_t len = strlen(state.buffer_to_send);
+   if (len > BUF_SIZE - 1)
+   {
+      printf("Termination Character [len %d]\n", len);
+      printf("%s\n", state.buffer_to_send);
+      exit(-1);
+   }
 }
 
 void AMController::write_message(const char *variable, long value)
@@ -166,14 +174,22 @@ void AMController::write_message(const char *variable, long value)
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%ld#", variable, value);
 
-   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE)
+   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
    {
       DEBUG_printf("Message Discarded\n");
       return;
    }
 
-   printf(">>>>>%s<\n",state.buffer_to_send);
-   strncat(state.buffer_to_send, buffer, BUF_SIZE - 1);
+   // printf(">>>>>%s<\n",state.buffer_to_send);
+   strncat(state.buffer_to_send, buffer, VARIABLELEN + VALUELEN + 2);
+
+   size_t len = strlen(state.buffer_to_send);
+   if (len > BUF_SIZE - 1)
+   {
+      printf("Termination Character [len %d]\n", len);
+      printf("%s\n", state.buffer_to_send);
+      exit(-1);
+   }
 }
 
 void AMController::write_message(const char *variable, unsigned long value)
@@ -187,14 +203,22 @@ void AMController::write_message(const char *variable, unsigned long value)
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%lu#", variable, value);
 
-   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE)
+   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
    {
       DEBUG_printf("Message Discarded\n");
       return;
    }
 
-printf(">>>>>%s<\n",state.buffer_to_send);
-   strncat(state.buffer_to_send, buffer, BUF_SIZE - 1);
+   // printf(">>>>>%s<\n", state.buffer_to_send);
+   strncat(state.buffer_to_send, buffer, VARIABLELEN + VALUELEN + 2);
+
+   size_t len = strlen(state.buffer_to_send);
+   if (len > BUF_SIZE - 1)
+   {
+      printf("Termination Character [len %d]\n", len);
+      printf("%s\n", state.buffer_to_send);
+      exit(-1);
+   }
 }
 
 void AMController::write_message(const char *variable, float value)
@@ -208,14 +232,22 @@ void AMController::write_message(const char *variable, float value)
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%.3f#", variable, value);
 
-   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE)
+   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
    {
       DEBUG_printf("Message Discarded\n");
       return;
    }
 
-printf(">>>>>%s<\n",state.buffer_to_send);
-   strncat(state.buffer_to_send, buffer, BUF_SIZE - 1);
+   // printf(">>>>>%s<\n", state.buffer_to_send);
+   strncat(state.buffer_to_send, buffer, VARIABLELEN + VALUELEN + 2);
+
+   size_t len = strlen(state.buffer_to_send);
+   if (len > BUF_SIZE - 1)
+   {
+      printf("Termination Character [len %d]\n", len);
+      printf("%s\n", state.buffer_to_send);
+      exit(-1);
+   }
 }
 
 void AMController::write_message(const char *variable, const char *value)
@@ -245,14 +277,23 @@ void AMController::write_message(const char *variable, const char *value)
 
    snprintf(buffer, BUF_SIZE, "%s=%s#", variable, value);
 
-   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE)
+   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
    {
       DEBUG_printf("Message Discarded\n");
       return;
    }
 
-printf(">>>>>%s<\n",state.buffer_to_send);
+   // printf(">>>>>%s<\n", state.buffer_to_send);
    strncat(state.buffer_to_send, buffer, BUF_SIZE - 1);
+   printf(">>>>>%s<\n", state.buffer_to_send);
+
+   size_t len = strlen(state.buffer_to_send);
+   if (len > BUF_SIZE - 1)
+   {
+      printf("Termination Character [len %d]\n", len);
+      printf("%s\n", state.buffer_to_send);
+      exit(-1);
+   }
 }
 
 void AMController::write_message_buffer(const char *value, uint size)
@@ -453,8 +494,8 @@ err_t AMController::tcp_server_sent(void *arg, struct tcp_pcb *tpcb, u16_t len)
    AMController *pico = (AMController *)arg;
    TCP_SERVER_T *state = &pico->state;
 
-   printf("tcp_server_sent %u\n", len);
-   // state->buffer_to_send[0] = 0;
+   // printf("tcp_server_sent %u\n", len);
+   //  state->buffer_to_send[0] = 0;
    return ERR_OK;
 }
 
@@ -465,7 +506,6 @@ err_t AMController::tcp_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf
 
    if (p != NULL)
    {
-
       // this method is callback from lwIP, so cyw43_arch_lwip_begin is not required, however you
       // can use this method to cause an assertion in debug mode, if this method is called when
       // cyw43_arch_lwip_begin IS needed
@@ -479,12 +519,12 @@ err_t AMController::tcp_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf
          // state->recv_len += pbuf_copy_partial(p, state->buffer_recv + state->recv_len, p->tot_len > buffer_left ? buffer_left : p->tot_len, 0);
          // state->buffer_recv[state->recv_len] = 0;
 
-         strncpy(state->buffer_recv, (char *)p->payload, MIN(p->tot_len, BUF_SIZE));
-         state->buffer_recv[p->tot_len] = 0;
+         strncpy(state->buffer_recv, (char *)p->payload, MIN(p->tot_len, BUF_SIZE - 1));
+         state->buffer_recv[MIN(p->tot_len, BUF_SIZE - 1)] = 0;
 
          DEBUG_printf("Received %s\n", state->buffer_recv);
 
-         pico->processBuffer(state->buffer_recv, p->tot_len);
+         pico->process_received_buffer(state->buffer_recv);
 
          tcp_recved(tpcb, p->tot_len);
       }
@@ -510,12 +550,26 @@ err_t AMController::tcp_server_send_data(void *arg, struct tcp_pcb *tpcb)
    AMController *pico = (AMController *)arg;
    TCP_SERVER_T *state = &pico->state;
 
-   int len = strlen(state->buffer_to_send);
+   size_t len = strlen(state->buffer_to_send);
 
    if (len == 0)
    {
       // DEBUG_printf("\tNothing to send\n");
       return ERR_OK;
+   }
+
+   if (len > BUF_SIZE - 1)
+   {
+      printf("Termination Character [len %d]\n", len);
+      printf("%s\n", state->buffer_to_send);
+      exit(-1);
+   }
+
+   if (state->buffer_to_send[len - 1] != '#')
+   {
+      printf("Termination Character [len %d]\n", len);
+      printf("%s\n", state->buffer_to_send);
+      exit(-1);
    }
 
    DEBUG_printf("Sending data %s [%d]\n", state->buffer_to_send, len);
@@ -580,7 +634,7 @@ void AMController::tcp_server_err(void *arg, err_t err)
    {
       DEBUG_printf("Device Disconnected\n", err);
       state->is_device_connected = false;
-      state->buffer_to_send[0]=0;
+      state->buffer_to_send[0] = 0;
       if (pico->deviceDisconnected != NULL)
       {
          pico->deviceDisconnected();
@@ -591,7 +645,7 @@ void AMController::tcp_server_err(void *arg, err_t err)
    {
       DEBUG_printf("Device Disconnected\n", err);
       state->is_device_connected = false;
-      state->buffer_to_send[0]=0;
+      state->buffer_to_send[0] = 0;
       if (pico->deviceDisconnected != NULL)
       {
          pico->deviceDisconnected();
@@ -658,10 +712,9 @@ err_t AMController::tcp_server_close(void *arg)
 /*         variable=value#
 /*****************************************************/
 
-void AMController::processBuffer(char *buffer, int len)
+void AMController::process_received_buffer(char *buffer)
 {
-   buffer[len] = '\0';
-   DEBUG_printf("Buffer >>>%s<<< [Len: %d]\n", buffer, len);
+   DEBUG_printf("Buffer >>>%s<<<\n", buffer);
 
    char *pHash;
 
