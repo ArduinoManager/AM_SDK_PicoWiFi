@@ -30,5 +30,6 @@ target_link_libraries(
 )
 
 target_compile_definitions(AM_PicoWiFi INTERFACE
-    # DEBUG   # Uncomment this line to debug the library
+    # DEBUG         # Uncomment this line to debug the library
+    DUMP_ALARMS   # Uncomment this line to debug alarms
 )

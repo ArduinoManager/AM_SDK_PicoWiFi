@@ -74,7 +74,7 @@ void AMController::init(
    FRESULT fr = f_mount(&fs, "", 1);
    if (FR_OK == fr)
    {
-      DEBUG_printf("SD Card in initialization function mounted!\n");
+      DEBUG_printf("SD Card mounted!\n");
       if (processAlarms != NULL)
       {
          // Initialize Alarms
@@ -88,7 +88,7 @@ void AMController::init(
    }
    else
    {
-      DEBUG_printf("SD not mounted\n");
+      printf("Error: SD not mounted!\n");
    }
 
    f_unmount("");

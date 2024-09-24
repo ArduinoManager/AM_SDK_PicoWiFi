@@ -4,6 +4,12 @@
 
 #include "AM_SDK_PicoWiFi.h"
 
+#ifdef DUMP_ALARMS
+#define DUMPALARMS_printf printf
+#else
+#define DUMPALARMS_printf
+#endif
+
 const char *const filename = "alarms.txt";
 
 AM_Alarm current_alarm;
@@ -105,9 +111,14 @@ void Alarms::check_fire_alarms(void (*fireAlarm)(char *))
 {
     time_t now = time(NULL);
 
-    DEBUG_printf("**** Check Alarms *****\n");
-    DEBUG_printf("Now time %" PRIi64, now);
-    DEBUG_printf("\n");
+    DUMPALARMS_printf("**** Check Alarms *****\n");
+
+    char buff[20];
+    strftime(buff, 20, "%Y-%m-%d %H:%M:%S GMT []", localtime(&now));
+
+    DUMPALARMS_printf("Now time: %s",buff);
+    DUMPALARMS_printf(" [%" PRIi64, now);
+    DUMPALARMS_printf("]\n");
 
     dumpAlarms();
 
@@ -206,16 +217,15 @@ static void save_alarms()
 
 static void dumpAlarms()
 {
-    DEBUG_printf("--- Alarms ----\n");
+    DUMPALARMS_printf("--- Alarms ----\n");
 
     for (int i = 0; i < last_alarm_idx; i++)
     {
         char buff[20];
         time_t alarm_time = alarms[i].time;
         strftime(buff, 20, "%Y-%m-%d %H:%M:%S GMT []", localtime(&alarm_time));
-
-        DEBUG_printf("%d: %s - %s [%lu] repeat: %s\n", i, alarms[i].id, buff, alarms[i].time, alarms[i].repeat ? "yes" : "no");
+        DUMPALARMS_printf("%d: %s - %s [%lu] repeat: %s\n", i, alarms[i].id, buff, alarms[i].time, alarms[i].repeat ? "yes" : "no");
     }
 
-    DEBUG_printf("---------------\n");
+    DUMPALARMS_printf("---------------\n");
 }
