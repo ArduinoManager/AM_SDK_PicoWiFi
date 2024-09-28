@@ -296,12 +296,53 @@ void AMController::write_message(const char *variable, const char *value)
    }
 }
 
+void AMController::write_message_immediate(const char *variable, const char *value)
+{
+   char buffer[BUF_SIZE];
+
+   state.buffer_to_send[0] = 0; // The buffer is emptied so no other data can be sent at the same time
+
+   snprintf(buffer, BUF_SIZE, "%s=%s#", variable, value);
+
+   err_t err = tcp_write(state.client_pcb, buffer, strlen(buffer), TCP_WRITE_FLAG_COPY);
+   if (err != ERR_OK)
+   {
+      printf("tcp_write error %d\n", err);
+      exit(-1);
+   }
+}
+
 void AMController::write_message_buffer(const char *value, uint size)
 {
    // DEBUG_printf("b[%d]",size);
    strncpy(state.buffer_to_send, value, size);
    state.buffer_to_send[size] = 0;
    tcp_server_send_data(this, state.client_pcb);
+}
+
+void AMController::write_message(const char *variable, float x, float y, float z)
+{
+   char buffer[3 * VARIABLELEN + 3 * VALUELEN + 1];
+
+   snprintf(buffer, VARIABLELEN + VALUELEN + 3, "%s=%.2f:%.2f:%.2f#", variable, x, y, z);
+
+   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
+   {
+      DEBUG_printf("Message Discarded\n");
+      // printf("\tTx Buffer >%s<\n", state.buffer_to_send);
+      // printf("\tBuffer    >%s<\n", buffer);
+      return;
+   }
+
+   strcat(state.buffer_to_send, buffer);
+
+   size_t len = strlen(state.buffer_to_send);
+   if (len > BUF_SIZE - 1)
+   {
+      printf("Termination Character [len %d]\n", len);
+      printf("%s\n", state.buffer_to_send);
+      exit(-1);
+   }
 }
 
 unsigned long AMController::now()
@@ -565,12 +606,12 @@ err_t AMController::tcp_server_send_data(void *arg, struct tcp_pcb *tpcb)
       exit(-1);
    }
 
-   if (state->buffer_to_send[len - 1] != '#')
-   {
-      printf("Termination Character [len %d]\n", len);
-      printf("%s\n", state->buffer_to_send);
-      exit(-1);
-   }
+   // if (state->buffer_to_send[len - 1] != '#')
+   // {
+   //    printf("Termination Character [len %d]\n", len);
+   //    printf("%s\n", state->buffer_to_send);
+   //    exit(-1);
+   // }
 
    DEBUG_printf("Sending data %s [%d]\n", state->buffer_to_send, len);
 
@@ -608,7 +649,6 @@ err_t AMController::tcp_server_send_data(void *arg, struct tcp_pcb *tpcb)
       else
       {
          retries += 1;
-
          // printf("tcp_output failed with error: %d\n", err);
          // exit(-1);
       }
