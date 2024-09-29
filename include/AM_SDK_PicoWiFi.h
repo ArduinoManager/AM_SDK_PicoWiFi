@@ -82,7 +82,6 @@ private:
     SDManager *sd_manager;
 
     TCP_SERVER_T state;
-    bool is_sending_content = false;
 
     bool tcp_server_open(void *arg, u16_t port);
     static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err);

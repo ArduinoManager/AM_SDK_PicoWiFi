@@ -138,10 +138,6 @@ bool AMController::alarm_timer_callback(__unused struct repeating_timer *t)
 
 void AMController::write_message(const char *variable, int value)
 {
-   if (is_sending_content)
-   {
-      return;
-   }
    char buffer[VARIABLELEN + VALUELEN + 3];
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%d#", variable, value);
@@ -165,11 +161,6 @@ void AMController::write_message(const char *variable, int value)
 
 void AMController::write_message(const char *variable, long value)
 {
-   if (is_sending_content)
-   {
-      return;
-   }
-
    char buffer[VARIABLELEN + VALUELEN + 3];
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%ld#", variable, value);
@@ -194,11 +185,6 @@ void AMController::write_message(const char *variable, long value)
 
 void AMController::write_message(const char *variable, unsigned long value)
 {
-   if (is_sending_content)
-   {
-      return;
-   }
-
    char buffer[VARIABLELEN + VALUELEN + 3];
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%lu#", variable, value);
@@ -223,11 +209,6 @@ void AMController::write_message(const char *variable, unsigned long value)
 
 void AMController::write_message(const char *variable, float value)
 {
-   if (is_sending_content)
-   {
-      return;
-   }
-
    char buffer[VARIABLELEN + VALUELEN + 3];
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%.3f#", variable, value);
@@ -252,27 +233,6 @@ void AMController::write_message(const char *variable, float value)
 
 void AMController::write_message(const char *variable, const char *value)
 {
-   if (strcmp(variable, "SD") == 0 && strcmp(value, "$C$") == 0)
-   {
-      is_sending_content = true;
-      strcpy(state.buffer_to_send, "SD=$C$#");
-      tcp_server_send_data(this, state.client_pcb);
-      busy_wait_ms(500);
-      return;
-   }
-   if (strcmp(variable, "SD") == 0 && strcmp(value, "$E$") == 0)
-   {
-      is_sending_content = false;
-      strcpy(state.buffer_to_send, "SD=$E$#");
-      tcp_server_send_data(this, state.client_pcb);
-      busy_wait_ms(500);
-      return;
-   }
-   if (is_sending_content)
-   {
-      return;
-   }
-
    char buffer[BUF_SIZE];
 
    snprintf(buffer, BUF_SIZE, "%s=%s#", variable, value);
@@ -315,9 +275,53 @@ void AMController::write_message_immediate(const char *variable, const char *val
 void AMController::write_message_buffer(const char *value, uint size)
 {
    // DEBUG_printf("b[%d]",size);
-   strncpy(state.buffer_to_send, value, size);
-   state.buffer_to_send[size] = 0;
-   tcp_server_send_data(this, state.client_pcb);
+   // strncpy(state.buffer_to_send, value, size);
+   // state.buffer_to_send[size] = 0;
+   // tcp_server_send_data(this, state.client_pcb);
+
+   state.buffer_to_send[0] = 0; // The buffer is emptied so no other data can be sent at the same time
+
+   int retries = 0;
+err_t err ;
+
+   while (retries < 20)
+   {
+      err = tcp_write(state.client_pcb, value, size, TCP_WRITE_FLAG_COPY);
+      if (err == ERR_OK)
+      {
+         break;
+      }
+      else
+      {
+         retries += 1;
+         sleep_ms(100);
+      }
+   }
+   if (retries == 20)
+   {
+      printf("tcp_output failed with error: %d\n", err);
+      exit(-1);
+   }
+
+   while (retries < 20)
+   {
+      err = tcp_output(state.client_pcb);
+      if (err == ERR_OK)
+      {
+         break;
+      }
+      else
+      {
+         retries += 1;
+         sleep_ms(100);
+      }
+   }
+
+   if (retries == 20)
+   {
+      printf("tcp_output failed with error: %d\n", err);
+      exit(-1);
+   }
 }
 
 void AMController::write_message(const char *variable, float x, float y, float z)
@@ -629,9 +633,6 @@ err_t AMController::tcp_server_send_data(void *arg, struct tcp_pcb *tpcb)
    err_t err = tcp_write(tpcb, state->buffer_to_send, len, TCP_WRITE_FLAG_COPY);
    if (err != ERR_OK)
    {
-      // Just in case
-      pico->is_sending_content = false;
-
       DEBUG_printf("Failed to write data %d [%s]\n", err, lwip_strerr(err));
       // return tcp_server_result(arg, err);
       return err;

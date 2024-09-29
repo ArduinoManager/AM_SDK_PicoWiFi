@@ -6,9 +6,9 @@
 #include "ff.h"
 
 #ifdef DEBUG_SD
-#define DEBUG_printf printf
+#define SD_DEBUG_printf printf
 #else
-#define DEBUG_printf
+#define SD_DEBUG_printf
 #endif
 
 SDManager::SDManager(AMController *pico)
@@ -29,8 +29,8 @@ bool SDManager::endsWith(const char *base, const char *str)
 
 void SDManager::process_sd_request(char *variable, char *value)
 {
-    DEBUG_printf("** processSD **\n");
-    DEBUG_printf("\tVariable %s - Value %s\n", variable, value);
+    SD_DEBUG_printf("** processSD **\n");
+    SD_DEBUG_printf("\tVariable %s - Value %s\n", variable, value);
 
     if (strcmp(variable, "SD") == 0)
     {
@@ -54,16 +54,16 @@ void SDManager::dir()
     fr = f_mount(&fs, "", 1);
     if (fr != FR_OK)
     {
-        DEBUG_printf("SD not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("SD not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
         return;
     }
 
-    DEBUG_printf("SD mounted\n");
+    SD_DEBUG_printf("SD mounted\n");
 
     fr = f_findfirst(&dir, &fno, "/", "*");
     if (FR_OK != fr)
     {
-        DEBUG_printf("f_open(%s) error: %s (%d)\n", "/", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("f_open(%s) error: %s (%d)\n", "/", FRESULT_str(fr), fr);
         return;
     }
 
@@ -71,12 +71,11 @@ void SDManager::dir()
     {
         if (fno.fname[0] != '.' && endsWith(fno.fname, ".txt"))
         {
-            DEBUG_printf("%s\n", fno.fname);
+            SD_DEBUG_printf("%s\n", fno.fname);
             pico->write_message_immediate("SD", fno.fname);
         }
         fr = f_findnext(&dir, &fno); /* Search for next item */
     }
-    // pico->write_message("SD", "$EFL$");
     pico->write_message_immediate("SD", "$EFL$");
 
     f_closedir(&dir);
@@ -94,12 +93,12 @@ bool SDManager::transmit_file(char *filename)
     FIL fil;
     char buffer[64];
 
-    DEBUG_printf("Sending file %s\n", filename);
+    SD_DEBUG_printf("Sending file %s\n", filename);
 
     fr = f_mount(&fs, "", 1);
     if (fr != FR_OK)
     {
-        DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
         return false;
     }
 
@@ -109,7 +108,7 @@ bool SDManager::transmit_file(char *filename)
         return false;
     }
 
-    pico->write_message("SD", "$C$");
+    pico->write_message_immediate("SD", "$C$");
 
     int chunk = 0;
     while (!f_eof(&fil))
@@ -123,12 +122,12 @@ bool SDManager::transmit_file(char *filename)
 
             return false;
         }
-        DEBUG_printf("Chunk %d\n", chunk++);
+        SD_DEBUG_printf("Chunk %d\n", chunk++);
         pico->write_message_buffer(buffer, size);
     }
-    pico->write_message("SD", "$E$");
+    pico->write_message_immediate("SD", "$E$");
 
-    DEBUG_printf("\nFile %s completed\n", filename);
+    SD_DEBUG_printf("\nFile %s completed\n", filename);
 
     f_close(&fil);
 
@@ -154,7 +153,7 @@ bool SDManager::append(char *filename, uint8_t *byte, unsigned int size)
     fr = f_write(&fil, byte, size, &written_bytes);
     if (fr != FR_OK)
     {
-        DEBUG_printf("f_write error: %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("f_write error: %s (%d)\n", FRESULT_str(fr), fr);
         return false;
     }
 
@@ -175,7 +174,7 @@ void SDManager::sd_log_labels(const char *variable, const char *label1, const ch
     fr = f_mount(&fs, "", 1);
     if (fr != FR_OK)
     {
-        DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
         return;
     }
 
@@ -187,13 +186,13 @@ void SDManager::sd_log_labels(const char *variable, const char *label1, const ch
     fr = f_open(&fil, filename, FA_OPEN_APPEND | FA_WRITE);
     if (fr != FR_OK)
     {
-        DEBUG_printf("Error opening file %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("Error opening file %s (%d)\n", FRESULT_str(fr), fr);
         return;
     }
 
     if (f_size(&fil) > 0)
     {
-        DEBUG_printf("No Labels required for %s\n", filename);
+        SD_DEBUG_printf("No Labels required for %s\n", filename);
         f_close(&fil);
         return;
     }
@@ -278,7 +277,7 @@ void SDManager::log_values(const char *variable, unsigned long time, float *v1, 
     fr = f_mount(&fs, "", 1);
     if (fr != FR_OK)
     {
-        DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
         return;
     }
 
@@ -290,7 +289,7 @@ void SDManager::log_values(const char *variable, unsigned long time, float *v1, 
     fr = f_open(&fil, filename, FA_OPEN_APPEND | FA_WRITE);
     if (fr != FR_OK)
     {
-        DEBUG_printf("Error opening file %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("Error opening file %s (%d)\n", FRESULT_str(fr), fr);
         return;
     }
 
@@ -349,7 +348,7 @@ FSIZE_t SDManager::sd_log_size(const char *variable)
     fr = f_mount(&fs, "", 1);
     if (fr != FR_OK)
     {
-        DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
         return 0;
     }
 
@@ -361,7 +360,7 @@ FSIZE_t SDManager::sd_log_size(const char *variable)
     fr = f_open(&fil, filename, FA_OPEN_APPEND | FA_WRITE);
     if (fr != FR_OK)
     {
-        DEBUG_printf("Error opening file %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("Error opening file %s (%d)\n", FRESULT_str(fr), fr);
         return 0;
     }
     FSIZE_t size = f_size(&fil);
@@ -384,7 +383,7 @@ void SDManager::sd_purge_data(const char *variable)
     fr = f_mount(&fs, "", 1);
     if (fr != FR_OK)
     {
-        DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
         return;
     }
 
@@ -396,7 +395,7 @@ void SDManager::sd_purge_data(const char *variable)
     fr = f_unlink(filename);
     if (fr != FR_OK)
     {
-        DEBUG_printf("Error deleting : %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("Error deleting : %s (%d)\n", FRESULT_str(fr), fr);
     }
 
     f_unmount("");
@@ -414,7 +413,8 @@ void SDManager::sd_send_log_data(const char *value)
     fr = f_mount(&fs, "", 1);
     if (fr != FR_OK)
     {
-        DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
+        pico->write_message_immediate(value, "");
         return;
     }
 
@@ -423,12 +423,12 @@ void SDManager::sd_send_log_data(const char *value)
     strcat(filename, value);
     strcat(filename, ".txt");
 
-    DEBUG_printf("Sending File %s\n", filename);
+    SD_DEBUG_printf("Sending File %s\n", filename);
 
     fr = f_open(&fil, filename, FA_OPEN_EXISTING | FA_READ);
     if (fr != FR_OK)
     {
-        DEBUG_printf("Error opening file : %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("Error opening file : %s (%d)\n", FRESULT_str(fr), fr);
         pico->write_message_immediate(value, "");
         f_unmount("");
         return;
@@ -439,7 +439,7 @@ void SDManager::sd_send_log_data(const char *value)
     while (!f_eof(&fil))
     {
         f_gets(line, 128, &fil);
-        DEBUG_printf("%s\n", line);
+        SD_DEBUG_printf("%s\n", line);
         pico->write_message_immediate(value, line);
     }
 
@@ -447,5 +447,5 @@ void SDManager::sd_send_log_data(const char *value)
     f_close(&fil);
     f_unmount("");
 
-    DEBUG_printf("File %s sent\n", filename);
+    SD_DEBUG_printf("File %s sent\n", filename);
 }
