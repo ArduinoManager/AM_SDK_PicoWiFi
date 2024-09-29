@@ -282,7 +282,7 @@ void AMController::write_message_buffer(const char *value, uint size)
    state.buffer_to_send[0] = 0; // The buffer is emptied so no other data can be sent at the same time
 
    int retries = 0;
-err_t err ;
+   err_t err;
 
    while (retries < 20)
    {

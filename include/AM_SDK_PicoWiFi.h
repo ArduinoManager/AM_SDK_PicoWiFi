@@ -93,6 +93,8 @@ private:
     static err_t tcp_server_result(void *arg, int status);
     static err_t tcp_server_close(void *arg);
 
+    void process_received_buffer(char *buffer);
+
 public:
     void init(
         u16_t port,
@@ -143,8 +145,6 @@ public:
 
     unsigned long log_size(const char *variable);
     void log_purge_data(const char *variable);
-
-    void process_received_buffer(char *buffer);
 };
 
 #endif
