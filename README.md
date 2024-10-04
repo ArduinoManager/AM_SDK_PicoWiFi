@@ -12,7 +12,7 @@ Go to the project folder and enter the following commands:
 mkdir lib
 cd lib
 git clone --recurse-submodules https://github.com/ArduinoManager/AM_SDK_PicoWiFi.git
-git clone --recurse-submodules https://github.com/carlk3/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico.git
+git clone --single-branch --branch 3.5.1 --recurse-submodules https://github.com/carlk3/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico.git
 ```
 
 
