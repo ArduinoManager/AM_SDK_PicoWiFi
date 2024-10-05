@@ -464,6 +464,15 @@ void AMController::log_purge_data(const char *variable)
    sd_manager->sd_purge_data(variable);
 }
 
+void AMController::gpio_temporary_put(uint pin, bool value, uint ms)
+{
+   bool previousValue = gpio_get(pin);
+
+   gpio_put(pin, value);
+   sleep_ms(ms);
+   gpio_put(pin, previousValue);
+}
+
 ////////
 
 bool AMController::tcp_server_open(void *arg, u16_t port)

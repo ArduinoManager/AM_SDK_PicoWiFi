@@ -145,6 +145,8 @@ public:
 
     unsigned long log_size(const char *variable);
     void log_purge_data(const char *variable);
+
+    void gpio_temporary_put(uint pin, bool value, uint ms); 
 };
 
 #endif
