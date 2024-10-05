@@ -39,8 +39,8 @@
 #include "dht22-pico.h"
 
 #define TCP_PORT 80
-#define WIFI_SSID "YOUR NETWORK SSID (name)"
-#define WIFI_PASSWORD "YOUR NETWORK PASSWORD"
+#define WIFI_SSID "homewirelessnetwork"
+#define WIFI_PASSWORD "Fabrizio22Camilla22Laura26!"
 
 #define CONNECTIONPIN CYW43_WL_GPIO_LED_PIN
 #define POTENTIOMETERPIN 28
@@ -51,9 +51,10 @@
 bool led = false;
 float pot = 0;
 uint16_t blue_led = 0;
+float tempC;
 
 AMController am_controller;
-dht_reading dht = dht_init(TEMPERATUREPIN);
+// dht_reading dht = dht_init(TEMPERATUREPIN);
 
 float getVoltage(uint16_t adc_value);
 
@@ -89,21 +90,26 @@ void doWork()
     adc_select_input(2);
     pot = adc_read();
 
-    printf("Reading DHT22 sensor...\n");
+    // printf("Reading DHT22 sensor...\n");
 
-    uint8_t status = dht_read(&dht);
-    if (status == DHT_OK)
-    {
-        printf("RH: %.1f%%\tTemp: %.1fC\n", dht.humidity, dht.temp_celsius);
-    }
-    else if (status == DHT_ERR_CHECKSUM)
-    {
-        printf("Bad data (checksum)\n");
-    }
-    else
-    {
-        printf("Bad data (NaN)\n");
-    }
+    // uint8_t status = dht_read(&dht);
+    // if (status == DHT_OK)
+    // {
+    //     printf("RH: %.1f%%\tTemp: %.1fC\n", dht.humidity, dht.temp_celsius);
+    // }
+    // else if (status == DHT_ERR_CHECKSUM)
+    // {
+    //     printf("Bad data (checksum)\n");
+    // }
+    // else
+    // {
+    //     printf("Bad data (NaN)\n");
+    // }
+
+    adc_select_input(4);
+    const float conversionFactor = 3.3f / (1 << 12);
+    float adc = (float)adc_read() * conversionFactor;
+    tempC = 27.0f - (adc - 0.706f) / 0.001721f;
 
     sleep_ms(2000);
 }
@@ -134,8 +140,10 @@ void processOutgoingMessages()
     am_controller.write_message("K", r);
     am_controller.write_message("Led", led);
 
-    am_controller.write_message("T", dht.temp_celsius);
-    am_controller.write_message("H", dht.humidity);
+    // am_controller.write_message("T", dht.temp_celsius);
+    // am_controller.write_message("H", dht.humidity);
+
+    am_controller.write_message("T", tempC);
 
     am_controller.write_message("Pot", getVoltage(pot));
 }
@@ -149,6 +157,8 @@ void processAlarms(char *alarmId)
     printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
     printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
     printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
+    led = !led;
+    gpio_put(YELLOWLEDPIN, led);
 }
 
 void initializeLogFiles()
@@ -192,13 +202,15 @@ int main()
     adc_init();
     adc_gpio_init(POTENTIOMETERPIN);
 
+    adc_set_temp_sensor_enabled(true);
+
     gpio_init(YELLOWLEDPIN);
     gpio_set_dir(YELLOWLEDPIN, GPIO_OUT);
     gpio_put(YELLOWLEDPIN, 0);
 
     gpio_set_function(BLUELEDPIN, GPIO_FUNC_PWM);
     uint slice_num_15 = pwm_gpio_to_slice_num(BLUELEDPIN);
-    pwm_set_wrap(slice_num_15, 65535);
+    pwm_set_wrap(slice_num_15, 255);
     pwm_set_enabled(slice_num_15, true);
     blue_led = 0;
     pwm_set_gpio_level(BLUELEDPIN, blue_led);
