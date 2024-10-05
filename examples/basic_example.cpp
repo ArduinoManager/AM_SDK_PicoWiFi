@@ -31,17 +31,31 @@
 */
 #include <stdio.h>
 #include "pico/stdlib.h"
+#include "hardware/adc.h"
+#include "hardware/pwm.h"
 
 #include "AM_SDK_PicoWiFi.h"
+
+#include "dht22-pico.h"
 
 #define TCP_PORT 80
 #define WIFI_SSID "YOUR NETWORK SSID (name)"
 #define WIFI_PASSWORD "YOUR NETWORK PASSWORD"
 
 #define CONNECTIONPIN CYW43_WL_GPIO_LED_PIN
+#define POTENTIOMETERPIN 28
+#define TEMPERATUREPIN 16
+#define YELLOWLEDPIN 14
+#define BLUELEDPIN 15
+
 bool led = false;
+float pot = 0;
+uint16_t blue_led = 0;
 
 AMController am_controller;
+dht_reading dht = dht_init(TEMPERATUREPIN);
+
+float getVoltage(uint16_t adc_value);
 
 void doSync()
 {
@@ -49,6 +63,7 @@ void doSync()
 
     am_controller.write_message("Led", led);
     am_controller.write_message("S1", led);
+    am_controller.write_message("Knob1", blue_led);
     am_controller.write_message("Msg", "Hello, this is your Pico W board!");
 }
 
@@ -70,19 +85,27 @@ void deviceDisconnected()
 
 void doWork()
 {
-    //printf("doWork\n");
-    busy_wait_ms(800);
+    // printf("doWork\n");
+    adc_select_input(2);
+    pot = adc_read();
 
-    float r = (rand() % 1000) / 10.0;
-    if (r > 50)
+    printf("Reading DHT22 sensor...\n");
+
+    uint8_t status = dht_read(&dht);
+    if (status == DHT_OK)
     {
-        unsigned long now = am_controller.now();
-
-        am_controller.logLn(now);
-        am_controller.logLn(r);
-
-        am_controller.log_value("SdLog", now, r);
+        printf("RH: %.1f%%\tTemp: %.1fC\n", dht.humidity, dht.temp_celsius);
     }
+    else if (status == DHT_ERR_CHECKSUM)
+    {
+        printf("Bad data (checksum)\n");
+    }
+    else
+    {
+        printf("Bad data (NaN)\n");
+    }
+
+    sleep_ms(2000);
 }
 
 void processIncomingMessages(char *variable, char *value)
@@ -92,17 +115,29 @@ void processIncomingMessages(char *variable, char *value)
     if (strcmp(variable, "S1") == 0)
     {
         led = atoi(value);
+        gpio_put(YELLOWLEDPIN, led);
+    }
+
+    if (strcmp(variable, "Knob1") == 0)
+    {
+        blue_led = atoi(value);
+        pwm_set_gpio_level(BLUELEDPIN, blue_led);
     }
 }
 
 void processOutgoingMessages()
 {
-    //printf("processOutgoingMessages\n");
+    // printf("processOutgoingMessages\n");
 
     float r = (rand() % 1000) / 10.0;
 
     am_controller.write_message("K", r);
     am_controller.write_message("Led", led);
+
+    am_controller.write_message("T", dht.temp_celsius);
+    am_controller.write_message("H", dht.humidity);
+
+    am_controller.write_message("Pot", getVoltage(pot));
 }
 
 void processAlarms(char *alarmId)
@@ -118,14 +153,26 @@ void processAlarms(char *alarmId)
 
 void initializeLogFiles()
 {
-     printf("---- Initialize Log Files --------\n");
-     
+    printf("---- Initialize Log Files --------\n");
+
     if (am_controller.log_size("SdLog") > 2000)
-    {        
+    {
         am_controller.log_purge_data("SdLog");
         printf("SdLog data purged");
     }
     am_controller.log_labels("SdLog", "L1");
+}
+
+/**
+  Auxiliary functions
+*/
+
+/*
+ returns the voltage on the analog input defined by pin
+*/
+float getVoltage(uint16_t adc_value)
+{
+    return (adc_value * 3.3 / 4095.0);
 }
 
 int main()
@@ -134,7 +181,7 @@ int main()
 
     if (cyw43_arch_init())
     {
-        printf("failed to initialize\n");
+        printf("Failed to initialize\n");
         return 1;
     }
 
@@ -142,11 +189,25 @@ int main()
 
     cyw43_arch_gpio_put(CONNECTIONPIN, 0);
 
+    adc_init();
+    adc_gpio_init(POTENTIOMETERPIN);
+
+    gpio_init(YELLOWLEDPIN);
+    gpio_set_dir(YELLOWLEDPIN, GPIO_OUT);
+    gpio_put(YELLOWLEDPIN, 0);
+
+    gpio_set_function(BLUELEDPIN, GPIO_FUNC_PWM);
+    uint slice_num_15 = pwm_gpio_to_slice_num(BLUELEDPIN);
+    pwm_set_wrap(slice_num_15, 65535);
+    pwm_set_enabled(slice_num_15, true);
+    blue_led = 0;
+    pwm_set_gpio_level(BLUELEDPIN, blue_led);
+
     ip4_addr_t ip;
     ip4_addr_t netmask;
     ip4_addr_t gateway;
 
-    IP4_ADDR(&ip, 192, 168, 1, 38);
+    IP4_ADDR(&ip, 192, 168, 1, 17);
     IP4_ADDR(&netmask, 255, 255, 255, 0);
     IP4_ADDR(&gateway, 192, 168, 1, 1);
 
@@ -155,15 +216,25 @@ int main()
     netif_set_addr(cyw43_state.netif, &ip, &netmask, &gateway); // set the IP addr, gateway & net mask
     cyw43_arch_lwip_end();
 
-    printf("Pico W Connecting to %s...\n", WIFI_SSID);
-    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000))
+    uint8_t connection_tries = 0;
+    while (connection_tries < 3)
     {
-        printf("Failed to connect to %s\n", WIFI_SSID);
-        return 1;
+        printf("Pico W Connecting to %s...\n", WIFI_SSID);
+        int conn_status = cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000);
+        if (conn_status == 0)
+        {
+            printf("Pico W Connected  to %s.\nAvailable at address: %s port: %d\n", WIFI_SSID, ip4addr_ntoa(&ip), TCP_PORT);
+            break;
+        }
+        else
+        {
+            printf("Failed to connect to %s [Error: %d]\n", WIFI_SSID, conn_status);
+            connection_tries += 1;
+        }
     }
-    else
+    if (connection_tries == 3)
     {
-        printf("Pico W Connected  to %s.\nAvailable at address: %s port: %d\n", WIFI_SSID, ip4addr_ntoa(&ip), TCP_PORT);
+        exit(-1);
     }
 
     am_controller.init(
