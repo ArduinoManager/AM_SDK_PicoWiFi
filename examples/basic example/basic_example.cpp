@@ -58,6 +58,7 @@ uint16_t blue_led = 0;
 float temperature;
 float humidity;
 unsigned long last_temp_measurement;
+unsigned long last_temp_stored;
 
 AMController am_controller;
 
@@ -126,13 +127,32 @@ void doWork()
     {
         last_temp_measurement = time_us_64() / 1000;
 
-        printf("Reading DHT22 sensor...\n");
+        printf("Reading DHT22 sensor... ");
 
         bool data_ok = DHT_read(&temperature, &humidity);
         if (data_ok)
         {
-            printf("-->Temperature: %.2f C, Humidity: %.2f%% RH\n", temperature, humidity);
+            printf("Temperature: %.2f C, Humidity: %.2f%% RH\n", temperature, humidity);
         }
+        else
+        {
+            printf("\n");
+        }
+    }
+
+    // Temperature is stored every 30s
+    if (time_us_64() / 1000 - last_temp_stored > 30000)
+    {
+        last_temp_stored = time_us_64() / 1000;
+        if (am_controller.log_size("Temp_History") > 2000)
+        {
+            am_controller.log_purge_data("Temp_History");
+            printf("Temp_History data purged");
+            am_controller.log_labels("Temp_History", "Temperature", "Humidity");
+        }
+        unsigned long now = am_controller.now();
+        am_controller.log_value("Temp_History", now, temperature, humidity);
+        printf("Temperature and Humidity stored into file\n");
     }
 
     // sleep_ms(100);
@@ -207,7 +227,13 @@ void processAlarms(char *alarmId)
 
 void initializeLogFiles()
 {
-    // printf("---- Initialize Log Files --------\n");
+    printf("---- Initialize Log Files --------\n");
+    if (am_controller.log_size("Temp_History") > 2000)
+    {
+        am_controller.log_purge_data("Temp_History");
+        printf("Temp_History data purged");
+    }
+    am_controller.log_labels("Temp_History", "Temperature", "Humidity");
 }
 
 /**
@@ -265,7 +291,7 @@ int main()
     pwm_set_gpio_level(BLUELEDPIN, blue_led);
 
     /** WiFi network configuration & connection */
-    
+
     ip4_addr_t ip;
     ip4_addr_t netmask;
     ip4_addr_t gateway;
@@ -313,4 +339,3 @@ int main()
 
     cyw43_arch_deinit();
 }
-
