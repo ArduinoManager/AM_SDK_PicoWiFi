@@ -35,11 +35,11 @@
 
 #include "AM_SDK_PicoWiFi.h"
 
+/* Defines */
+
 #define TCP_PORT 180
 #define WIFI_SSID "YOUR NETWORK SSID"
 #define WIFI_PASSWORD "YOUR NETWORK PASSWORD"
-
-/* Defines */
 
 /* Gobal variables */
 
@@ -90,7 +90,7 @@ void doWork()
 {
     // printf("doWork\n");
 
-    // sleep_ms(4000);
+    // sleep_ms(100);
 }
 
 /**
@@ -136,7 +136,7 @@ void processAlarms(char *alarmId)
  */
 void initializeLogFiles()
 {
-    printf("---- Initialize Log Files --------\n");
+    // printf("---- Initialize Log Files --------\n");
 }
 
 /**
@@ -145,7 +145,11 @@ void initializeLogFiles()
 
 
 /**
+ * 
+ * 
  * Main program function used for initial configurations only
+ * 
+ * 
  */
 int main()
 {

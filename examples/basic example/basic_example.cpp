@@ -7,7 +7,7 @@
 
    Version: 1.0
 
-   09/15/2024
+   10/06/2024
 
    All rights reserved
 
@@ -35,7 +35,7 @@
 #include "hardware/pwm.h"
 
 #include "AM_SDK_PicoWiFi.h"
-// #include "DHT22.h"
+#include "DHT22.h"
 
 /* Defines */
 
@@ -54,11 +54,10 @@
 bool led = false;
 float pot = 0;
 uint16_t blue_led = 0;
-float tempC;
 
-// float temperature;
-// float humidity;
-// unsigned long last_temp_measurement;
+float temperature;
+float humidity;
+unsigned long last_temp_measurement;
 
 AMController am_controller;
 
@@ -123,25 +122,20 @@ void doWork()
     pot = adc_read();
 
     // DHT22 can be read at most once every 2s
-    // if (time_us_64() / 1000 - last_temp_measurement > 2100)
-    // {
-    //     last_temp_measurement = time_us_64() / 1000;
+    if (time_us_64() / 1000 - last_temp_measurement > 2000)
+    {
+        last_temp_measurement = time_us_64() / 1000;
 
-    //     printf("Reading DHT22 sensor...\n");
+        printf("Reading DHT22 sensor...\n");
 
-    //     uint result = DHT_read(&temperature, &humidity);
-    //     if (result == DHT_OK)
-    //     {
-    //         printf("-->Temperature: %.2f C, Humidity: %.2f%% RH\n", temperature, humidity);
-    //     }
-    // }
+        bool data_ok = DHT_read(&temperature, &humidity);
+        if (data_ok)
+        {
+            printf("-->Temperature: %.2f C, Humidity: %.2f%% RH\n", temperature, humidity);
+        }
+    }
 
-    adc_select_input(4);
-    const float conversionFactor = 3.3f / (1 << 12);
-    float adc = (float)adc_read() * conversionFactor;
-    tempC = 27.0f - (adc - 0.706f) / 0.001721f;
-
-    // sleep_ms(4000);
+    // sleep_ms(100);
 }
 
 /**
@@ -188,10 +182,10 @@ void processOutgoingMessages()
     am_controller.write_message("K", r);
     am_controller.write_message("Led", led);
 
-    // am_controller.write_message("T", temperature);
-    // am_controller.write_message("H", humidity);
+    am_controller.write_message("T", temperature);
+    am_controller.write_message("H", humidity);
 
-    am_controller.write_message("T", tempC);
+    // am_controller.write_message("T", tempC);
 
     am_controller.write_message("Pot", getVoltage(pot));
 }
@@ -205,36 +199,19 @@ void processOutgoingMessages()
 void processAlarms(char *alarmId)
 {
     printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
-    printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
-    printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
     printf("Alarm %s fired\n", alarmId);
-    printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
-    printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
     printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
     led = !led;
     gpio_put(YELLOWLEDPIN, led);
 }
 
-/**
- *
- *
- * This function is called once at the program start to initialize log files, if any
- *
- */
 void initializeLogFiles()
 {
-    printf("---- Initialize Log Files --------\n");
-
-    if (am_controller.log_size("SdLog") > 2000)
-    {
-        am_controller.log_purge_data("SdLog");
-        printf("SdLog data purged");
-    }
-    am_controller.log_labels("SdLog", "L1");
+    // printf("---- Initialize Log Files --------\n");
 }
 
 /**
-  Other Auxiliary functions
+  Auxiliary functions
 */
 
 /*
@@ -246,7 +223,11 @@ float getVoltage(uint16_t adc_value)
 }
 
 /**
+ *
+ *
  * Main program function used for initial configurations only
+ *
+ *
  */
 int main()
 {
@@ -260,9 +241,9 @@ int main()
 
     cyw43_arch_enable_sta_mode();
 
-    /** Initialize analog and digital PINs */
-
     cyw43_arch_gpio_put(CONNECTIONPIN, 0);
+
+    /** Initialize analog and digital PINs */
 
     adc_init();
     adc_gpio_init(POTENTIOMETERPIN);
@@ -270,7 +251,7 @@ int main()
     adc_set_temp_sensor_enabled(true);
 
     // Initialize the DHT22 sensor on the specified GPIO pin
-    // DHT_init(TEMPERATUREPIN);
+    DHT_init(TEMPERATUREPIN);
 
     gpio_init(YELLOWLEDPIN);
     gpio_set_dir(YELLOWLEDPIN, GPIO_OUT);
@@ -332,3 +313,4 @@ int main()
 
     cyw43_arch_deinit();
 }
+
