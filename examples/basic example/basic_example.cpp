@@ -35,12 +35,11 @@
 #include "hardware/pwm.h"
 
 #include "AM_SDK_PicoWiFi.h"
+// #include "DHT22.h"
 
-#include "dht22-pico.h"
-
-#define TCP_PORT 80
-#define WIFI_SSID "homewirelessnetwork"
-#define WIFI_PASSWORD "Fabrizio22Camilla22Laura26!"
+#define TCP_PORT 180
+#define WIFI_SSID "YOUR NETWORK SSID"
+#define WIFI_PASSWORD "YOUR NETWORK PASSWORD"
 
 #define CONNECTIONPIN CYW43_WL_GPIO_LED_PIN
 #define POTENTIOMETERPIN 28
@@ -53,8 +52,11 @@ float pot = 0;
 uint16_t blue_led = 0;
 float tempC;
 
+// float temperature;
+// float humidity;
+// unsigned long last_temp_measurement;
+
 AMController am_controller;
-// dht_reading dht = dht_init(TEMPERATUREPIN);
 
 float getVoltage(uint16_t adc_value);
 
@@ -90,20 +92,18 @@ void doWork()
     adc_select_input(2);
     pot = adc_read();
 
-    // printf("Reading DHT22 sensor...\n");
+    // DHT22 can be read at most once every 2s
+    // if (time_us_64() / 1000 - last_temp_measurement > 2100)
+    // {
+    //     last_temp_measurement = time_us_64() / 1000;
 
-    // uint8_t status = dht_read(&dht);
-    // if (status == DHT_OK)
-    // {
-    //     printf("RH: %.1f%%\tTemp: %.1fC\n", dht.humidity, dht.temp_celsius);
-    // }
-    // else if (status == DHT_ERR_CHECKSUM)
-    // {
-    //     printf("Bad data (checksum)\n");
-    // }
-    // else
-    // {
-    //     printf("Bad data (NaN)\n");
+    //     printf("Reading DHT22 sensor...\n");
+
+    //     uint result = DHT_read(&temperature, &humidity);
+    //     if (result == DHT_OK)
+    //     {
+    //         printf("-->Temperature: %.2f C, Humidity: %.2f%% RH\n", temperature, humidity);
+    //     }
     // }
 
     adc_select_input(4);
@@ -111,7 +111,7 @@ void doWork()
     float adc = (float)adc_read() * conversionFactor;
     tempC = 27.0f - (adc - 0.706f) / 0.001721f;
 
-    sleep_ms(2000);
+    // sleep_ms(4000);
 }
 
 void processIncomingMessages(char *variable, char *value)
@@ -129,6 +129,12 @@ void processIncomingMessages(char *variable, char *value)
         blue_led = atoi(value);
         pwm_set_gpio_level(BLUELEDPIN, blue_led);
     }
+    if (strcmp(variable, "Push1") == 0)
+    {
+        // am_controller.gpio_temporary_put(YELLOWLEDPIN, true, 100);
+        bool v = atoi(value);
+        gpio_put(YELLOWLEDPIN, v);
+    }
 }
 
 void processOutgoingMessages()
@@ -140,8 +146,8 @@ void processOutgoingMessages()
     am_controller.write_message("K", r);
     am_controller.write_message("Led", led);
 
-    // am_controller.write_message("T", dht.temp_celsius);
-    // am_controller.write_message("H", dht.humidity);
+    // am_controller.write_message("T", temperature);
+    // am_controller.write_message("H", humidity);
 
     am_controller.write_message("T", tempC);
 
@@ -203,6 +209,9 @@ int main()
     adc_gpio_init(POTENTIOMETERPIN);
 
     adc_set_temp_sensor_enabled(true);
+
+    // Initialize the DHT22 sensor on the specified GPIO pin
+    // DHT_init(TEMPERATUREPIN);
 
     gpio_init(YELLOWLEDPIN);
     gpio_set_dir(YELLOWLEDPIN, GPIO_OUT);
