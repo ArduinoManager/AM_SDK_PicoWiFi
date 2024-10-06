@@ -39,19 +39,31 @@
 #define WIFI_SSID "YOUR NETWORK SSID"
 #define WIFI_PASSWORD "YOUR NETWORK PASSWORD"
 
-/*
-Defines
- */
+/* Defines */
 
 /* Gobal variables */
 
 AMController am_controller;
 
+/* Local Function Prototypes */
+
+/* Callbacks */
+
+/** 
+ * 
+ * This function is called when the iOS/macOS device connects to the Pico board
+ * 
+ */
 void deviceConnected()
 {
     printf("---- deviceConnected --------\n");
 }
 
+/** 
+ * 
+ * This function is called when the iOS/macOS device disconnects to the Pico board
+ * 
+ */
 void deviceDisconnected()
 {
     printf("---- deviceDisonnected --------\n");
@@ -60,7 +72,7 @@ void deviceDisconnected()
 /**
  *
  *
- * This function is called when the iOS/macOS device connects and needs to initialize the position of switches and knobs
+ * This function is called when the iOS/macOS device connects and needs to initialize the position of switches, knobs and other widgets
  *
  */
 void doSync()
@@ -131,6 +143,10 @@ void initializeLogFiles()
   Other Auxiliary functions
 */
 
+
+/**
+ * Main program function used for initial configurations only
+ */
 int main()
 {
     stdio_init_all();

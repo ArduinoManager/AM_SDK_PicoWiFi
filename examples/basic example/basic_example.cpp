@@ -37,6 +37,8 @@
 #include "AM_SDK_PicoWiFi.h"
 // #include "DHT22.h"
 
+/* Defines */
+
 #define TCP_PORT 180
 #define WIFI_SSID "YOUR NETWORK SSID"
 #define WIFI_PASSWORD "YOUR NETWORK PASSWORD"
@@ -46,6 +48,8 @@
 #define TEMPERATUREPIN 16
 #define YELLOWLEDPIN 14
 #define BLUELEDPIN 15
+
+/* Gobal variables */
 
 bool led = false;
 float pot = 0;
@@ -58,8 +62,44 @@ float tempC;
 
 AMController am_controller;
 
+/* Local Function Prototypes */
+
 float getVoltage(uint16_t adc_value);
 
+/* Callbacks */
+
+/**
+ *
+ * This function is called when the iOS/macOS device connects to the Pico board
+ *
+ */
+void deviceConnected()
+{
+    printf("---- deviceConnected --------\n");
+
+    cyw43_arch_gpio_put(CONNECTIONPIN, 1);
+    busy_wait_ms(500);
+}
+
+/**
+ *
+ * This function is called when the iOS/macOS device disconnects to the Pico board
+ *
+ */
+void deviceDisconnected()
+{
+    printf("---- deviceDisonnected --------\n");
+
+    cyw43_arch_gpio_put(CONNECTIONPIN, 0);
+    busy_wait_ms(500);
+}
+
+/**
+ *
+ *
+ * This function is called when the iOS/macOS device connects and needs to initialize the position of switches, knobs and other widgets
+ *
+ */
 void doSync()
 {
     printf("---- doSync --------\n");
@@ -70,22 +110,12 @@ void doSync()
     am_controller.write_message("Msg", "Hello, this is your Pico W board!");
 }
 
-void deviceConnected()
-{
-    printf("---- deviceConnected --------\n");
-
-    cyw43_arch_gpio_put(CONNECTIONPIN, 1);
-    busy_wait_ms(500);
-}
-
-void deviceDisconnected()
-{
-    printf("---- deviceDisonnected --------\n");
-
-    cyw43_arch_gpio_put(CONNECTIONPIN, 0);
-    busy_wait_ms(500);
-}
-
+/**
+ *
+ *
+ * This function is called periodically and its equivalent to the standard loop() function
+ *
+ */
 void doWork()
 {
     // printf("doWork\n");
@@ -114,6 +144,12 @@ void doWork()
     // sleep_ms(4000);
 }
 
+/**
+ *
+ *
+ * This function is called when a new message is received from the iOS/macOS device
+ *
+ */
 void processIncomingMessages(char *variable, char *value)
 {
     printf("processIncomingMessages var: %s value: %s\n", variable, value);
@@ -137,6 +173,12 @@ void processIncomingMessages(char *variable, char *value)
     }
 }
 
+/**
+ *
+ *
+ * This function is called periodically and messages can be sent to the iOS/macOS device
+ *
+ */
 void processOutgoingMessages()
 {
     // printf("processOutgoingMessages\n");
@@ -154,6 +196,12 @@ void processOutgoingMessages()
     am_controller.write_message("Pot", getVoltage(pot));
 }
 
+/**
+ *
+ *
+ * This function is called when an alarm is fired
+ *
+ */
 void processAlarms(char *alarmId)
 {
     printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
@@ -167,6 +215,12 @@ void processAlarms(char *alarmId)
     gpio_put(YELLOWLEDPIN, led);
 }
 
+/**
+ *
+ *
+ * This function is called once at the program start to initialize log files, if any
+ *
+ */
 void initializeLogFiles()
 {
     printf("---- Initialize Log Files --------\n");
@@ -180,7 +234,7 @@ void initializeLogFiles()
 }
 
 /**
-  Auxiliary functions
+  Other Auxiliary functions
 */
 
 /*
@@ -191,6 +245,9 @@ float getVoltage(uint16_t adc_value)
     return (adc_value * 3.3 / 4095.0);
 }
 
+/**
+ * Main program function used for initial configurations only
+ */
 int main()
 {
     stdio_init_all();
@@ -202,6 +259,8 @@ int main()
     }
 
     cyw43_arch_enable_sta_mode();
+
+    /** Initialize analog and digital PINs */
 
     cyw43_arch_gpio_put(CONNECTIONPIN, 0);
 
@@ -224,6 +283,8 @@ int main()
     blue_led = 0;
     pwm_set_gpio_level(BLUELEDPIN, blue_led);
 
+    /** WiFi network configuration & connection */
+    
     ip4_addr_t ip;
     ip4_addr_t netmask;
     ip4_addr_t gateway;
