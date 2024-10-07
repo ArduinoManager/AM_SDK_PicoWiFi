@@ -73,7 +73,6 @@ private:
     void (*deviceConnected)(void);                                // Pointer to the function called when a device connects to Arduino
     void (*deviceDisconnected)(void);                             // Pointer to the function called when a device disconnects from Arduino
     void (*processAlarms)(char *alarm);                           // Pointer to the function called when an alarm is fired
-    void (*initializeLogFiles)();                                 // Pointer to the function called to initialize the log files
 
     Alarms alarms;
     struct repeating_timer alarms_checks_timer;
@@ -104,8 +103,7 @@ public:
         void (*processOutgoingMessages)(void),
         void (*deviceConnected)(void),
         void (*deviceDisconnected)(void),
-        void (*processAlarms)(char *alarm),
-        void (*initializeLogFiles)());
+        void (*processAlarms)(char *alarm));
 
     void write_message(const char *variable, int value);
 

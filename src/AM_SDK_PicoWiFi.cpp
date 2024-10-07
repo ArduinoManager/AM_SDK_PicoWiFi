@@ -28,8 +28,7 @@ void AMController::init(
     void (*processOutgoingMessages)(void),
     void (*deviceConnected)(void),
     void (*deviceDisconnected)(void),
-    void (*processAlarms)(char *alarm),
-    void (*initializeLogFiles)())
+    void (*processAlarms)(char *alarm))
 {
    DEBUG_printf("Library Initialization\n");
 
@@ -41,7 +40,6 @@ void AMController::init(
    this->deviceConnected = deviceConnected;
    this->deviceDisconnected = deviceDisconnected;
    this->processAlarms = processAlarms;
-   this->initializeLogFiles = initializeLogFiles;
 
    sd_manager = new SDManager(this);
 
@@ -80,10 +78,6 @@ void AMController::init(
          // Initialize Alarms
          alarms.init_alarms();
          add_repeating_timer_ms(ALARMS_CHECKS_PERIOD, this->alarm_timer_callback, this, &alarms_checks_timer);
-         if (initializeLogFiles != NULL)
-         {
-            initializeLogFiles();
-         }
       }
    }
    else
@@ -243,9 +237,8 @@ void AMController::write_message(const char *variable, const char *value)
       return;
    }
 
-   // printf(">>>>>%s<\n", state.buffer_to_send);
    strncat(state.buffer_to_send, buffer, BUF_SIZE - 1);
-   printf(">>>>>%s<\n", state.buffer_to_send);
+   //printf(">>>>>%s<\n", state.buffer_to_send);
 
    size_t len = strlen(state.buffer_to_send);
    if (len > BUF_SIZE - 1)
