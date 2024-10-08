@@ -42,7 +42,7 @@ to your main file as starting point
 ```
 
 pico_sdk_init()
-add_subdirectory(lib/XXXX/src build)
+add_subdirectory(lib/AM_SDK_PicoWiFi/src build)
 …
 …
 
