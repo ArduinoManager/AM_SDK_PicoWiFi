@@ -209,8 +209,7 @@ int main()
         &processOutgoingMessages,
         &deviceConnected,
         &deviceDisconnected,
-        &processAlarms,
-        &initializeLogFiles);
+        &processAlarms);
 
     cyw43_arch_deinit();
 }
