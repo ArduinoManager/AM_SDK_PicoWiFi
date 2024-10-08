@@ -28,7 +28,64 @@ git clone --recurse-submodules https://github.com/carlk3/no-OS-FatFS-SD-SDIO-SPI
 cd no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
 git switch --detach tags/v3.5.1
 ```
-6) From the Raspberry Pico extension select Configure CMake
+
+6) Copy the content of:
+
+```
+lib/examples/skeleton/skeleton.cpp
+```
+
+to your main file as starting point
+
+7) Make the following changes to CMakeLists.txt
+
+```
+
+pico_sdk_init()
+add_subdirectory(lib/XXXX/src build)
+…
+…
+
+target_link_libraries(…
+      pico_stdlib
+      hardware_adc
+      hardware_pwm
+      AM_PicoWiFi
+      )
+…
+…
+
+target_include_directories(example2 PRIVATE
+  ${CMAKE_CURRENT_LIST_DIR}
+  ${CMAKE_CURRENT_LIST_DIR}/..
+  lib/AM_SDK_PicoWiFi/include
+)
+
+```
+
+
+8) Update the following information as per your network
+
+```
+
+#define TCP_PORT 180
+#define WIFI_SSID "YOUR NETWORK SSID"
+#define WIFI_PASSWORD "YOUR NETWORK PASSWORD"
+
+....
+
+IP4_ADDR(&ip, 192, 168, 1, 17);
+IP4_ADDR(&netmask, 255, 255, 255, 0);
+IP4_ADDR(&gateway, 192, 168, 1, 1);
+
+```
+
+
+9) Delete build folder if exists
+
+10) From the Raspberry Pico extension select Configure CMake
+
+
 
 7) Press F5 to run the program
 
