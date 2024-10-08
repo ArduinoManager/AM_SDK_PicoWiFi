@@ -129,17 +129,6 @@ void processAlarms(char *alarmId)
 }
 
 /**
- *
- *
- * This function is called once at the program start to initialize log files, if any
- *
- */
-void initializeLogFiles()
-{
-    // printf("---- Initialize Log Files --------\n");
-}
-
-/**
   Other Auxiliary functions
 */
 

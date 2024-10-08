@@ -225,17 +225,6 @@ void processAlarms(char *alarmId)
     gpio_put(YELLOWLEDPIN, led);
 }
 
-void initializeLogFiles()
-{
-    printf("---- Initialize Log Files --------\n");
-    if (am_controller.log_size("Temp_History") > 2000)
-    {
-        am_controller.log_purge_data("Temp_History");
-        printf("Temp_History data purged");
-    }
-    am_controller.log_labels("Temp_History", "Temperature", "Humidity");
-}
-
 /**
   Auxiliary functions
 */
@@ -289,6 +278,9 @@ int main()
     pwm_set_enabled(slice_num_15, true);
     blue_led = 0;
     pwm_set_gpio_level(BLUELEDPIN, blue_led);
+
+    // Inizialize the file for the Logged Data Widget
+    am_controller.log_labels("Temp_History", "Temperature", "Humidity");
 
     /** WiFi network configuration & connection */
 
