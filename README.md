@@ -1,7 +1,24 @@
 # AM_SDK_PicoWiFi
 
+This C++ library is designed to interface with the Arduino Manager app on iOS and macOS.
 
-# How to configure a manual generated project
+ * Supported Boards: Pico W
+ * Protocol: WiFi
+
+## Arduino Manager
+
+Arduino Manager allows you to control and receive data from any Arduino or Arduino compatible microcontroller and Raspberry Pico. It provides:
+
+* Over 30 customizable widgets (such as switch, knob, slider, display, gauge, bar and more)
+* A built-in Code Generator for quickly and easily generating the code
+
+More information available here:
+
+- iOS: https://sites.google.com/site/fabboco/home/arduino-manager-for-iphone-ipad
+- macOS: https://sites.google.com/site/fabboco/home/arduino-manager-for-mac
+
+
+## How to configure a manual generated project
 
 1) Open Visual Studio Code
 
@@ -20,7 +37,7 @@
 
 4) Right click the lib folder and select Open in Integrated Terminal
 
-5) enter the following commands:
+5) Enter the following commands:
 
 ```
 git clone --recurse-submodules https://github.com/ArduinoManager/AM_SDK_PicoWiFi.git
@@ -80,16 +97,13 @@ IP4_ADDR(&gateway, 192, 168, 1, 1);
 
 ```
 
-
 9) Delete build folder if exists
 
 10) From the Raspberry Pico extension select Configure CMake
 
+11) Press F5 to run the program
 
-
-7) Press F5 to run the program
-
-# How to configure a Arduino Manager Code Generator project
+## How to configure a Arduino Manager Code Generator project
 
 1) Generate the code using the Arduino Manager Code Generator
 
@@ -111,7 +125,7 @@ git switch --detach tags/v3.5.1
 
 7) Press F5 to run the program
 
-# How to Debug the Library
+## How to Debug the Library
 
 1) Open the file
 
@@ -126,7 +140,7 @@ git switch --detach tags/v3.5.1
     # DEBUG_SD      # Uncomment this line to debug SD Card operations
 ```
 
-# How to Debug the SD Library
+## How to Debug the SD Library
 
 1) Open the file
 ```
@@ -139,7 +153,9 @@ git switch --detach tags/v3.5.1
     #define USE_DBG_PRINTF 1
 ```
 
-# Update the library
+## Update the library
+
+Go to the AM_SDK_PicoWiFi folder and enter:
 
 ```
 git pull origin main
