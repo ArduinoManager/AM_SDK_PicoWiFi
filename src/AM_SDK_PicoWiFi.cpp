@@ -205,7 +205,7 @@ void AMController::write_message(const char *variable, float value)
 {
    char buffer[VARIABLELEN + VALUELEN + 3];
 
-   snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%.3f#", variable, value);
+   snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%.5f#", variable, value);
 
    if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
    {
@@ -238,7 +238,7 @@ void AMController::write_message(const char *variable, const char *value)
    }
 
    strncat(state.buffer_to_send, buffer, BUF_SIZE - 1);
-   //printf(">>>>>%s<\n", state.buffer_to_send);
+   // printf(">>>>>%s<\n", state.buffer_to_send);
 
    size_t len = strlen(state.buffer_to_send);
    if (len > BUF_SIZE - 1)
@@ -257,10 +257,37 @@ void AMController::write_message_immediate(const char *variable, const char *val
 
    snprintf(buffer, BUF_SIZE, "%s=%s#", variable, value);
 
-   err_t err = tcp_write(state.client_pcb, buffer, strlen(buffer), TCP_WRITE_FLAG_COPY);
-   if (err != ERR_OK)
+   int retries = 0;
+   err_t err;
+   while (retries < 20)
    {
-      printf("tcp_write error %d\n", err);
+
+      err = tcp_write(state.client_pcb, buffer, strlen(buffer), TCP_WRITE_FLAG_COPY);
+      if (err == ERR_OK)
+      {
+         break;
+      }
+      else
+      {
+         sleep_ms(100);
+      }
+
+      err = tcp_output(state.client_pcb);
+      if (err == ERR_OK)
+      {
+         break;
+      }
+      else
+      {
+         sleep_ms(100);
+      }
+
+      retries += 1;
+   }
+
+   if (retries == 20)
+   {
+      print_error("write_message_immediate - tcp_output", err);
       exit(-1);
    }
 }
@@ -292,7 +319,7 @@ void AMController::write_message_buffer(const char *value, uint size)
    }
    if (retries == 20)
    {
-      printf("tcp_output failed with error: %d\n", err);
+      print_error("write_message_buffer - tcp_write", err);
       exit(-1);
    }
 
@@ -312,7 +339,7 @@ void AMController::write_message_buffer(const char *value, uint size)
 
    if (retries == 20)
    {
-      printf("tcp_output failed with error: %d\n", err);
+      print_error("write_message_buffer - tcp_output", err);
       exit(-1);
    }
 }
@@ -800,6 +827,10 @@ void AMController::process_received_buffer(char *buffer)
          {
             sd_manager->sd_send_log_data(value);
          }
+         else if (strcmp(variable, "$SDLogPurge$") == 0 && strlen(value) > 0)
+         {
+            sd_manager->process_sd_request(variable, value);
+         }
          else
          {
             this->processIncomingMessages(variable, value);
@@ -810,4 +841,82 @@ void AMController::process_received_buffer(char *buffer)
    }
 
    DEBUG_printf("processBuffer completed \n");
+}
+
+/**
+ * Prints the error code in readable form
+ */
+void AMController::print_error(const char *msg, err_t error)
+{
+   switch (error)
+   {
+   case ERR_MEM:
+      printf("%s: Out of memory error\n", msg);
+      break;
+
+   case ERR_BUF:
+      printf("%s: Buffer error\n", msg);
+      break;
+
+   case ERR_TIMEOUT:
+      printf("%s: Timeout error\n", msg);
+      break;
+
+   case ERR_RTE:
+      printf("%s: Routing problem\n", msg);
+      break;
+
+   case ERR_INPROGRESS:
+      printf("%s: Operation in progress\n", msg);
+      break;
+
+   case ERR_VAL:
+      printf("%s: Illegal value\n", msg);
+      break;
+
+   case ERR_WOULDBLOCK:
+      printf("%s: Operation would block\n", msg);
+      break;
+
+   case ERR_USE:
+      printf("%s: Address in use\n", msg);
+      break;
+
+   case ERR_ALREADY:
+      printf("%s: Already connecting\n", msg);
+      break;
+
+   case ERR_ISCONN:
+      printf("%s: Conn already established\n", msg);
+      break;
+
+   case ERR_CONN:
+      printf("%s: Not connected\n", msg);
+      break;
+
+   case ERR_IF:
+      printf("%s: Low-level netif error\n", msg);
+      break;
+
+   case ERR_ABRT:
+      printf("%s: Connection aborted\n", msg);
+      break;
+
+   case ERR_RST:
+      printf("%s: Connection reset\n", msg);
+      break;
+
+   case ERR_CLSD:
+      printf("%s: Connection closed\n", msg);
+      break;
+
+   case ERR_ARG:
+      printf("%s: Illegal argument\n", msg);
+      break;
+
+   default:
+      break;
+   }
+
+   fflush(stdout);
 }
