@@ -18,6 +18,12 @@ More information available here:
 - macOS: https://sites.google.com/site/fabboco/home/arduino-manager-for-mac
 
 
+### SD Library
+
+This library leverages the no-OS-FatFS-SD-SDIO-SPI-RPi-Pico library to manage the SD Card.
+
+https://github.com/carlk3/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
+
 ## How to configure a manual generated project
 
 1) Open Visual Studio Code
