@@ -106,6 +106,10 @@ static void ntp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
 }
 
 // Called with results of operation
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnarrowing"
+
 static void ntp_result(NTP_T *state, int status, time_t *result)
 {
     state->tries += 1;
@@ -137,6 +141,8 @@ static void ntp_result(NTP_T *state, int status, time_t *result)
     state->ntp_test_time = make_timeout_time_ms(NTP_TEST_TIME);
     state->dns_request_sent = false;
 }
+#pragma GCC diagnostic pop
+
 
 static int64_t ntp_failed_handler(alarm_id_t id, void *user_data)
 {
