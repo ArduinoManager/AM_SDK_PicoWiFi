@@ -39,7 +39,16 @@ void SDManager::process_sd_request(char *variable, char *value)
 
     if (strcmp(variable, "$SDDL$") == 0 && strlen(value) > 0)
     {
-        transmit_file(value);
+        if (!transmit_file(value)) {
+            SD_DEBUG_printf("Error sending file");
+        }
+    }
+
+    if (strcmp(variable, "$SDLogPurge$") == 0 && strlen(value) > 0)
+    {
+        SD_DEBUG_printf("Purging %s\n", value);
+        sd_purge_data_keeping_labels(value);
+        sd_send_log_data(value);
     }
 }
 
@@ -105,6 +114,7 @@ bool SDManager::transmit_file(char *filename)
     fr = f_open(&fil, filename, FA_OPEN_EXISTING | FA_READ);
     if (fr != FR_OK)
     {
+        SD_DEBUG_printf("Error opening file %s - error: %s (%d)\n", filename, FRESULT_str(fr), fr);
         return false;
     }
 
@@ -130,7 +140,6 @@ bool SDManager::transmit_file(char *filename)
     SD_DEBUG_printf("\nFile %s completed\n", filename);
 
     f_close(&fil);
-
     f_unmount("");
 
     return true;
@@ -395,9 +404,58 @@ void SDManager::sd_purge_data(const char *variable)
     fr = f_unlink(filename);
     if (fr != FR_OK)
     {
-        SD_DEBUG_printf("Error deleting : %s (%d)\n", FRESULT_str(fr), fr);
+        SD_DEBUG_printf("Error deleting: %s - %s (%d)\n", filename, FRESULT_str(fr), fr);
     }
 
+    f_unmount("");
+}
+
+void SDManager::sd_purge_data_keeping_labels(const char *variable)
+{
+    FATFS fs;
+    FRESULT fr;
+    DIR dir;
+    FILINFO fno;
+    FRESULT res;
+    FIL fil;
+
+    fr = f_mount(&fs, "", 1);
+    if (fr != FR_OK)
+    {
+        SD_DEBUG_printf("Device not mounted - error: %s (%d)\n", FRESULT_str(fr), fr);
+        return;
+    }
+
+    char filename[64];
+    strcpy(filename, "/");
+    strcat(filename, variable);
+    strcat(filename, ".txt");
+
+    fr = f_open(&fil, filename,FA_OPEN_EXISTING | FA_READ | FA_WRITE);
+    if (fr != FR_OK)
+    {
+        SD_DEBUG_printf("Error opening file : %s (%d)\n", FRESULT_str(fr), fr);
+        f_unmount("");
+        return;
+    }
+
+    char line[128];
+
+    // Reads the first line which contains the labels
+    f_gets(line, 128, &fil);
+    SD_DEBUG_printf("%s\n", line);
+
+    // Truncate the file at current position
+    fr = f_truncate(&fil);
+    if (fr != FR_OK)
+    {
+        SD_DEBUG_printf("Error truncating file : %s (%d)\n", FRESULT_str(fr), fr);
+        f_close(&fil);
+        f_unmount("");
+        return;
+    }
+
+    f_close(&fil);
     f_unmount("");
 }
 

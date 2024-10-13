@@ -30,6 +30,7 @@ public:
     void log_value(const char *variable, unsigned long time, float v1, float v2, float v3, float v4, float v5);
     FSIZE_t sd_log_size(const char *variable);
     void sd_purge_data(const char *variable);
+    void sd_purge_data_keeping_labels(const char *variable);
     void sd_send_log_data(const char *value);
 
 private:
