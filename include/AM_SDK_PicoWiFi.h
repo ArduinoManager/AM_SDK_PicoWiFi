@@ -31,9 +31,6 @@
 
 #include "lwip/tcp.h"
 
-#define HIGH 1
-#define LOW 0
-
 #ifdef DEBUG
 #define DEBUG_printf printf
 #else
