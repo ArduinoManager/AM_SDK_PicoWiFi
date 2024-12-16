@@ -49,7 +49,7 @@ https://github.com/carlk3/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
 git clone --recurse-submodules https://github.com/ArduinoManager/AM_SDK_PicoWiFi.git
 git clone --recurse-submodules https://github.com/carlk3/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico.git
 cd no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
-git switch --detach tags/v3.5.1
+git switch --detach tags/v3.6.2
 ```
 
 6) Copy the content of:

@@ -1,6 +1,9 @@
 #include "AM_Ntp.h"
 #include "lwip/dns.h"
-#include "hardware/rtc.h"
+
+#include "pico/stdlib.h"
+#include "pico/util/datetime.h"
+#include "pico/aon_timer.h"
 
 #define NTP_SERVER "pool.ntp.org"
 #define NTP_MSG_LEN 48
@@ -120,17 +123,7 @@ static void ntp_result(NTP_T *state, int status, time_t *result)
         struct tm *utc = gmtime(result);
         DEBUG_printf("got ntp response: %02d/%02d/%04d %02d:%02d:%02d\n", utc->tm_mday, utc->tm_mon + 1, utc->tm_year + 1900, utc->tm_hour, utc->tm_min, utc->tm_sec);
 
-        datetime_t t = {
-            .year = utc->tm_year + 1900,
-            .month = utc->tm_mon + 1,
-            .day = utc->tm_mday,
-            //.dotw = 4, // 0 is Sunday, so 5 is Thursday
-            .dotw = utc->tm_wday,
-            .hour = utc->tm_hour,
-            .min = utc->tm_min,
-            .sec = utc->tm_sec};
-
-        rtc_set_datetime(&t);
+        aon_timer_start_calendar(utc);
     }
 
     if (state->ntp_resend_alarm > 0)

@@ -14,7 +14,8 @@
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
 
-#include "hardware/rtc.h"
+// #include "hardware/rtc.h"
+#include "pico/aon_timer.h"
 
 #include "f_util.h"
 #include "ff.h"
@@ -43,11 +44,10 @@ void AMController::init(
 
    sd_manager = new SDManager(this);
 
-   rtc_init();
+   struct tm ctime;
 
-   datetime_t ct;
-   rtc_get_datetime(&ct);
-   // DEBUG_printf("Current Time: %02d/%02d/%04d %02d:%02d:%02d  Day: %d\n", ct.day, ct.month, ct.year, ct.hour, ct.min, ct.sec, ct.dotw);
+   //aon_timer_get_time_calendar(&d);
+   //DEBUG_printf("Current Time %s", asctime(&ctime));
 
    // Setup current time
    Ntp nttp;
@@ -57,8 +57,8 @@ void AMController::init(
       DEBUG_printf("Time not set\n");
    }
 
-   rtc_get_datetime(&ct);
-   DEBUG_printf("Current Time: %02d/%02d/%04d %02d:%02d:%02d  Day: %d\n", ct.day, ct.month, ct.year, ct.hour, ct.min, ct.sec, ct.dotw);
+   aon_timer_get_time_calendar(&ctime);
+   DEBUG_printf("Current Time %s", asctime(&ctime));
 
    // Setup SD Card
    time_init();

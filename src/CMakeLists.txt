@@ -23,7 +23,6 @@ target_include_directories(AM_PicoWiFi INTERFACE
 
 target_link_libraries(
     pico_stdlib INTERFACE
-    hardware_rtc INTERFACE
     pico_aon_timer INTERFACE
     pico_cyw43_arch_lwip_threadsafe_background INTERFACE
     no-OS-FatFS-SD-SDIO-SPI-RPi-Pico INTERFACE
