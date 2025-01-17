@@ -205,7 +205,7 @@ void AMController::write_message(const char *variable, float value)
 {
    char buffer[VARIABLELEN + VALUELEN + 3];
 
-   snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%.5f#", variable, value);
+   snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%.5g#", variable, value);
 
    if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
    {
