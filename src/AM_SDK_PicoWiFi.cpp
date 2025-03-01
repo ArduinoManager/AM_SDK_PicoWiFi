@@ -54,11 +54,11 @@ void AMController::init(
 
    if (nttp.ntp_init() != ERR_OK)
    {
-      DEBUG_printf("Time not set\n");
+      printf("Time not set!\n");
    }
 
    aon_timer_get_time_calendar(&ctime);
-   DEBUG_printf("Current Time %s", asctime(&ctime));
+   printf("Current GMT Time: %s", asctime(&ctime));
 
    // Setup SD Card
    time_init();
