@@ -46,8 +46,8 @@ void AMController::init(
 
    struct tm ctime;
 
-   //aon_timer_get_time_calendar(&d);
-   //DEBUG_printf("Current Time %s", asctime(&ctime));
+   // aon_timer_get_time_calendar(&d);
+   // DEBUG_printf("Current Time %s", asctime(&ctime));
 
    // Setup current time
    Ntp nttp;
@@ -58,7 +58,12 @@ void AMController::init(
    }
 
    aon_timer_get_time_calendar(&ctime);
-   printf("Current GMT Time: %s", asctime(&ctime));
+   ctime.tm_isdst = 0;
+   char buffer[32];
+   if (strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &ctime) > 0)
+   {
+      printf("Current GMT Time: %s\r\n", buffer);
+   }
 
    // Setup SD Card
    time_init();
