@@ -143,6 +143,7 @@ public:
     void log_purge_data(const char *variable);
 
     void gpio_temporary_put(uint pin, bool value, uint ms);
+    float to_voltage(uint16_t adc_value, float vref);
 };
 
 #endif

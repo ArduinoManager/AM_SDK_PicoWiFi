@@ -498,6 +498,12 @@ void AMController::gpio_temporary_put(uint pin, bool value, uint ms)
    gpio_put(pin, previousValue);
 }
 
+float AMController::to_voltage(uint16_t adc_value, float vref)
+{
+   const float conversion_factor = vref / (1 << 12);
+   return  adc_value * conversion_factor;
+}
+
 ////////
 
 bool AMController::tcp_server_open(void *arg, u16_t port)
