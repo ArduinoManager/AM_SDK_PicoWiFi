@@ -14,8 +14,8 @@
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
 
-// #include "hardware/rtc.h"
 #include "pico/aon_timer.h"
+#include "hardware/adc.h"
 
 #include "f_util.h"
 #include "ff.h"
@@ -501,7 +501,20 @@ void AMController::gpio_temporary_put(uint pin, bool value, uint ms)
 float AMController::to_voltage(uint16_t adc_value, float vref)
 {
    const float conversion_factor = vref / (1 << 12);
-   return  adc_value * conversion_factor;
+   return adc_value * conversion_factor;
+}
+
+uint16_t AMController::avg_adc_read(uint8_t samples)
+{
+   uint32_t sum = 0;
+
+   for (uint8_t i = 0; i < samples; i++)
+   {
+      sum += adc_read();
+      sleep_us(50); // small delay improves stability
+   }
+
+   return (uint16_t)(sum / samples);
 }
 
 ////////

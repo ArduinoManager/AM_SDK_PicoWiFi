@@ -16,7 +16,7 @@
 
    Author: Fabrizio Boco - fabboco@gmail.com
 
-   Version: 1.0
+   Version: 1.1
 
    All rights reserved
 
@@ -144,6 +144,7 @@ public:
 
     void gpio_temporary_put(uint pin, bool value, uint ms);
     float to_voltage(uint16_t adc_value, float vref);
+    uint16_t avg_adc_read(uint8_t samples);
 };
 
 #endif
