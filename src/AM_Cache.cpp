@@ -70,15 +70,25 @@ void AM_Cache::add(const char *name, const char *value)
 {
     AM_CacheItem item;
 
-    item.setName(name);
-    item.setType(AM_TEXT);
-    item.setValue(value);
+    // item.setName(name);
+    // item.setType(AM_TEXT);
+    // item.setValue(value);
 
-    item.print();
+    // item.print();
 
-    cache[this->last_used++] = item;
+    // cache[this->last_used++] = item;
 
-    cache[this->last_used-1].print();
+    // cache[this->last_used-1].print();
+
+
+int next = this->last_used++;
+
+
+cache[next].setName(name);
+cache[next].setType(AM_TEXT);
+cache[next].setValue(value);
+
+cache[this->last_used-1].print();
 }
 
 bool AM_Cache::value_updated(const char *name, int value)
@@ -192,8 +202,6 @@ bool AM_Cache::value_updated(const char *name, const char *value)
     int variable_idx;
 
     variable_idx = find(name);
-
-    printf("Variable Index %d",variable_idx);
 
     if (variable_idx == -1)
     {

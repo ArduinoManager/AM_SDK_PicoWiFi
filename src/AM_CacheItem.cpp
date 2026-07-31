@@ -13,6 +13,7 @@ AM_CacheItem::~AM_CacheItem()
     if (this->textValue != nullptr)
     {
         free(this->textValue);
+        this->textValue = nullptr;
     }
 }
 
