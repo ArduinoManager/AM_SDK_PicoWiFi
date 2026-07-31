@@ -175,6 +175,11 @@ void AMController::write_message(const char *variable, long value)
 {
    char buffer[VARIABLELEN + VALUELEN + 3];
 
+   if (!cache->value_updated(variable, value))
+   {
+      return;
+   }
+
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%ld#", variable, value);
 
    if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
@@ -198,6 +203,11 @@ void AMController::write_message(const char *variable, long value)
 void AMController::write_message(const char *variable, unsigned long value)
 {
    char buffer[VARIABLELEN + VALUELEN + 3];
+
+   if (!cache->value_updated(variable, value))
+   {
+      return;
+   }
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%lu#", variable, value);
 
@@ -229,7 +239,7 @@ void AMController::write_message(const char *variable, float value)
    }
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%.5f#", variable, value);
-   
+
    if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
    {
       printf("!!!! >>%s [%d]<\n", state.buffer_to_send, strlen(state.buffer_to_send));
@@ -243,7 +253,6 @@ void AMController::write_message(const char *variable, float value)
 
    printf(">>>>>>>>>>%s<\n", buffer);
 
-
    size_t len = strlen(state.buffer_to_send);
    if (len > BUF_SIZE - 1)
    {
@@ -256,6 +265,11 @@ void AMController::write_message(const char *variable, float value)
 void AMController::write_message(const char *variable, const char *value)
 {
    char buffer[BUF_SIZE];
+   
+   if (!cache->value_updated(variable, value))
+   {
+      return;
+   }
 
    snprintf(buffer, BUF_SIZE, "%s=%s#", variable, value);
 

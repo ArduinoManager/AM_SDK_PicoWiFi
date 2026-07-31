@@ -9,6 +9,8 @@
 enum AM_ValueType
 {
     AM_INT,
+    AM_LONG,
+    AM_UNSIGNED_LONG,
     AM_FLOAT,
     AM_TEXT
 };
@@ -23,9 +25,12 @@ private:
     union
     {
         int intValue;
+        long longValue;
+        unsigned long unsignedlongValue;
         float floatValue;
-        char textValue[32];
     };
+
+    char *textValue = nullptr;
 
 public:
     AM_CacheItem();
@@ -37,10 +42,17 @@ public:
     void setType(AM_ValueType type);
 
     int getIntValue();
+    long getLongValue();
+    long getUnsignedLongValue();
     float getFloatValue();
+    char *getStringValue();
     void setValue(int value);
+    void setValue(long value);
+    void setValue(unsigned long value);
     void setValue(float value);
-    void setValue(char *value);
+    void setValue(const char *value);
+
+    void print(void);
 };
 
 #endif

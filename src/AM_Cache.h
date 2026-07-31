@@ -22,10 +22,18 @@ public:
     ~AM_Cache();
 
     int find(const char *name);
+
     void add(const char *name, int value);
+    void add(const char *name, long value);
+    void add(const char *name, unsigned long value);
+    void add(const char *name, float value);
+    void add(const char *name, const char  *value);
 
     bool value_updated(const char *name, int value);
+    bool value_updated(const char *name, long value);
+    bool value_updated(const char *name, unsigned long value);
     bool value_updated(const char *name, float value);
+    bool value_updated(const char *name, const char  *value);
 
     void clear(void);
 };

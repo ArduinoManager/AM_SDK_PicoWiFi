@@ -5,10 +5,15 @@
 
 AM_CacheItem::AM_CacheItem()
 {
+    name[0] = '\0';
 }
 
 AM_CacheItem::~AM_CacheItem()
 {
+    if (this->textValue != nullptr)
+    {
+        free(this->textValue);
+    }
 }
 
 char *AM_CacheItem::getName()
@@ -31,9 +36,24 @@ int AM_CacheItem::getIntValue()
     return this->intValue;
 }
 
+long AM_CacheItem::getLongValue()
+{
+    return this->longValue;
+}
+
+long AM_CacheItem::getUnsignedLongValue()
+{
+    return this->unsignedlongValue;
+}
+
 float AM_CacheItem::getFloatValue()
 {
     return this->floatValue;
+}
+
+char *AM_CacheItem::getStringValue()
+{
+    return this->textValue;
 }
 
 void AM_CacheItem::setValue(int value)
@@ -41,12 +61,58 @@ void AM_CacheItem::setValue(int value)
     this->intValue = value;
 }
 
+void AM_CacheItem::setValue(long value)
+{
+    this->longValue = value;
+}
+
+void AM_CacheItem::setValue(unsigned long value)
+{
+    this->unsignedlongValue = value;
+}
+
 void AM_CacheItem::setValue(float value)
 {
     this->floatValue = value;
 }
 
-void AM_CacheItem::setValue(char *value)
+void AM_CacheItem::setValue(const char *value)
 {
+    printf("TEXT\n");
+
+    if (this->textValue == nullptr)
+    {
+        printf("MALLOC\n");
+        this->textValue = (char *)malloc(strlen(value) + 1);
+        if (this->textValue == nullptr)
+        {
+            return;
+        }
+    }
+    else
+    {
+        printf("REALLOC\n");
+        char *p = (char *)realloc(this->textValue, strlen(value) + 1);
+        if (p == nullptr)
+        {
+            return;
+        }
+        this->textValue = p;
+    }
+
     strcpy(this->textValue, value);
+}
+
+void AM_CacheItem::print(void)
+{
+    switch (type)
+    {
+    case AM_TEXT:
+        printf("name: %s : %s\n", name, textValue);
+        break;
+
+    default:
+        printf("name: %s : ??\n", name);
+        break;
+    }
 }
