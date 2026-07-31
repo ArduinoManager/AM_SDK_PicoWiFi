@@ -44,6 +44,7 @@
 #define VALUELEN 14
 
 class SDManager;
+class AM_Cache;
 
 typedef struct TCP_SERVER_T_
 {
@@ -91,6 +92,8 @@ private:
 
     void process_received_buffer(char *buffer);
     void print_error(const char *msg, err_t error);
+
+    AM_Cache* cache;
 
 public:
     void init(

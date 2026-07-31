@@ -10,6 +10,8 @@ target_sources(AM_PicoWiFi INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/AM_Ntp.cpp
     ${CMAKE_CURRENT_LIST_DIR}/AM_Alarms.cpp
     ${CMAKE_CURRENT_LIST_DIR}/AM_SDManager.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/AM_Cache.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/AM_CacheItem.cpp
     ${CMAKE_CURRENT_LIST_DIR}/hw_config.cpp
 )
 

@@ -21,6 +21,8 @@
 #include "ff.h"
 #include "my_rtc.h"
 
+#include "AM_Cache.h"
+
 void AMController::init(
     u16_t port,
     void (*doWork)(void),
@@ -41,6 +43,8 @@ void AMController::init(
    this->deviceConnected = deviceConnected;
    this->deviceDisconnected = deviceDisconnected;
    this->processAlarms = processAlarms;
+
+   cache = new AM_Cache();
 
    sd_manager = new SDManager(this);
 
@@ -139,15 +143,24 @@ void AMController::write_message(const char *variable, int value)
 {
    char buffer[VARIABLELEN + VALUELEN + 3];
 
+   if (!cache->value_updated(variable, value))
+   {
+      return;
+   }
+
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%d#", variable, value);
 
    if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
    {
-      DEBUG_printf("Message Discarded\n");
+      printf("Message Discarded [Int]\n");
+      printf("!!!! >>%s [%d]<\n", state.buffer_to_send, strlen(state.buffer_to_send));
+      printf("!!!! >>%s<\n", buffer);
       return;
    }
 
    strncat(state.buffer_to_send, buffer, VARIABLELEN + VALUELEN + 2);
+
+   printf(">>>>>>>>>>%s<\n", buffer);
 
    size_t len = strlen(state.buffer_to_send);
    if (len > BUF_SIZE - 1)
@@ -210,16 +223,26 @@ void AMController::write_message(const char *variable, float value)
 {
    char buffer[VARIABLELEN + VALUELEN + 3];
 
-   snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%.5g#", variable, value);
-
-   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
+   if (!cache->value_updated(variable, value))
    {
-      DEBUG_printf("Message Discarded\n");
       return;
    }
 
-   // printf(">>>>>%s<\n", state.buffer_to_send);
+   snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%.5f#", variable, value);
+   
+   if (strlen(state.buffer_to_send) + strlen(buffer) > BUF_SIZE - 1)
+   {
+      printf("!!!! >>%s [%d]<\n", state.buffer_to_send, strlen(state.buffer_to_send));
+      printf("!!!! >>%s<\n", buffer);
+
+      printf("Message Discarded [FLOAT]\n");
+      return;
+   }
+
    strncat(state.buffer_to_send, buffer, VARIABLELEN + VALUELEN + 2);
+
+   printf(">>>>>>>>>>%s<\n", buffer);
+
 
    size_t len = strlen(state.buffer_to_send);
    if (len > BUF_SIZE - 1)
@@ -733,6 +756,7 @@ void AMController::tcp_server_err(void *arg, err_t err)
       {
          pico->deviceDisconnected();
       }
+      pico->cache->clear();
       return;
    }
    if (err == ERR_CLSD)
