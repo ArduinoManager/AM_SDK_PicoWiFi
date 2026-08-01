@@ -71,6 +71,7 @@ private:
     void (*deviceConnected)(void);                                // Pointer to the function called when a device connects to Arduino
     void (*deviceDisconnected)(void);                             // Pointer to the function called when a device disconnects from Arduino
     void (*processAlarms)(char *alarm);                           // Pointer to the function called when an alarm is fired
+    uint32_t lastKeepAliveTime;                                   // Last time a message or keep-alive (KA) was sent
 
     Alarms alarms;
     struct repeating_timer alarms_checks_timer;
@@ -93,7 +94,7 @@ private:
     void process_received_buffer(char *buffer);
     void print_error(const char *msg, err_t error);
 
-    AM_Cache* cache;
+    AM_Cache *cache;
 
 public:
     void init(
@@ -117,6 +118,8 @@ public:
 
     void write_message(const char *variable, float x, float y, float z);
 
+    // This function returns the current Unix timestamp
+    // The number of seconds since January 1, 1970, 00:00:00 UTC
     unsigned long now();
 
     void log(int msg);

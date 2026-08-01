@@ -44,6 +44,8 @@ void AMController::init(
    this->deviceDisconnected = deviceDisconnected;
    this->processAlarms = processAlarms;
 
+   lastKeepAliveTime = 0;
+
    cache = new AM_Cache();
 
    sd_manager = new SDManager(this);
@@ -112,6 +114,13 @@ void AMController::init(
       if (state.is_device_connected & state.is_sync_completed)
       {
          processOutgoingMessages();
+
+         if (this->now() - lastKeepAliveTime >= 15)
+         {
+            lastKeepAliveTime = this->now();
+               write_message_immediate("KA", 0);
+               DEBUG_printf("KA\n");
+         }
       }
 
 #if PICO_CYW43_ARCH_POLL
@@ -147,6 +156,7 @@ void AMController::write_message(const char *variable, int value)
    {
       return;
    }
+   lastKeepAliveTime = this->now();
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%d#", variable, value);
 
@@ -159,8 +169,6 @@ void AMController::write_message(const char *variable, int value)
    }
 
    strncat(state.buffer_to_send, buffer, VARIABLELEN + VALUELEN + 2);
-
-   printf(">>>>>>>>>>%s<\n", buffer);
 
    size_t len = strlen(state.buffer_to_send);
    if (len > BUF_SIZE - 1)
@@ -179,6 +187,7 @@ void AMController::write_message(const char *variable, long value)
    {
       return;
    }
+   lastKeepAliveTime = this->now();
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%ld#", variable, value);
 
@@ -208,6 +217,7 @@ void AMController::write_message(const char *variable, unsigned long value)
    {
       return;
    }
+   lastKeepAliveTime = this->now();
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%lu#", variable, value);
 
@@ -237,6 +247,7 @@ void AMController::write_message(const char *variable, float value)
    {
       return;
    }
+   lastKeepAliveTime = this->now();
 
    snprintf(buffer, VARIABLELEN + VALUELEN + 2, "%s=%.5f#", variable, value);
 
@@ -251,8 +262,6 @@ void AMController::write_message(const char *variable, float value)
 
    strncat(state.buffer_to_send, buffer, VARIABLELEN + VALUELEN + 2);
 
-   printf(">>>>>>>>>>%s<\n", buffer);
-
    size_t len = strlen(state.buffer_to_send);
    if (len > BUF_SIZE - 1)
    {
@@ -265,11 +274,12 @@ void AMController::write_message(const char *variable, float value)
 void AMController::write_message(const char *variable, const char *value)
 {
    char buffer[BUF_SIZE];
-   
+
    if (!cache->value_updated(variable, value))
    {
       return;
    }
+   lastKeepAliveTime = this->now();
 
    snprintf(buffer, BUF_SIZE, "%s=%s#", variable, value);
 
@@ -303,7 +313,6 @@ void AMController::write_message_immediate(const char *variable, const char *val
    err_t err;
    while (retries < 20)
    {
-
       err = tcp_write(state.client_pcb, buffer, strlen(buffer), TCP_WRITE_FLAG_COPY);
       if (err == ERR_OK)
       {
@@ -620,6 +629,8 @@ err_t AMController::tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err
    {
       pico->deviceConnected();
    }
+
+   pico->lastKeepAliveTime = 0;
 
    return ERR_OK;
 }

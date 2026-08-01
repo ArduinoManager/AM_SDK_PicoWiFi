@@ -79,11 +79,8 @@ void AM_CacheItem::setValue(float value)
 
 void AM_CacheItem::setValue(const char *value)
 {
-    printf("TEXT\n");
-
     if (this->textValue == nullptr)
     {
-        printf("MALLOC\n");
         this->textValue = (char *)malloc(strlen(value) + 1);
         if (this->textValue == nullptr)
         {
@@ -92,7 +89,6 @@ void AM_CacheItem::setValue(const char *value)
     }
     else
     {
-        printf("REALLOC\n");
         char *p = (char *)realloc(this->textValue, strlen(value) + 1);
         if (p == nullptr)
         {
