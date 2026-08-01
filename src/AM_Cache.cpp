@@ -83,7 +83,6 @@ bool AM_Cache::value_updated(const char *name, int value)
 
     if (variable_idx == -1)
     {
-        // printf("\t\tVariable %s not found\n", name);
         add(name, value);
         return true;
     }
@@ -92,11 +91,9 @@ bool AM_Cache::value_updated(const char *name, int value)
 
     if (current_value == value)
     {
-        // printf("\t\tVariable %s found with value %d [NO UPDATE]\n", name, current_value);
         return false;
     }
 
-    // printf("\t\tVariable %s found with value %.5f [UPDATE]\n", name, current_value);
     cache[variable_idx].setValue(value);
 
     return true;
@@ -110,7 +107,6 @@ bool AM_Cache::value_updated(const char *name, long value)
 
     if (variable_idx == -1)
     {
-        // printf("\t\tVariable %s not found\n", name);
         add(name, value);
         return true;
     }
@@ -122,7 +118,6 @@ bool AM_Cache::value_updated(const char *name, long value)
         return false;
     }
 
-    // printf("\t\tVariable %s found with value %.ld [UPDATE]\n", name, current_value);
     cache[variable_idx].setValue(value);
 
     return true;
@@ -136,7 +131,6 @@ bool AM_Cache::value_updated(const char *name, unsigned long value)
 
     if (variable_idx == -1)
     {
-        // printf("\t\tVariable %s not found\n", name);
         add(name, value);
         return true;
     }
@@ -148,7 +142,6 @@ bool AM_Cache::value_updated(const char *name, unsigned long value)
         return false;
     }
 
-    printf("\t\tVariable %s found with value %.ld [UPDATE]\n", name, current_value);
     cache[variable_idx].setValue(value);
 
     return true;
@@ -162,20 +155,17 @@ bool AM_Cache::value_updated(const char *name, float value)
 
     if (variable_idx == -1)
     {
-        // printf("\t\tVariable %s not found\n", name);
         add(name, value);
         return true;
     }
 
     float current_value = cache[variable_idx].getFloatValue();
 
-    if (current_value == value)
+    if (abs(current_value - value) <= 1e-5)
     {
-        // printf("\t\tVariable %s found with value %d [NO UPDATE]\n", name, current_value);
         return false;
     }
 
-    // printf("\t\tVariable %s found with value %.5f [UPDATE]\n", name, current_value);
     cache[variable_idx].setValue(value);
 
     return true;
@@ -198,11 +188,9 @@ bool AM_Cache::value_updated(const char *name, const char *value)
 
     if (strcmp(current_value, value) == 0)
     {
-        // printf("\t\tVariable %s found with value %d [NO UPDATE]\n", name, current_value);
         return false;
     }
 
-    // printf("\t\tVariable %s found with value %.5f [UPDATE]\n", name, current_value);
     cache[variable_idx].setValue(value);
 
     return true;

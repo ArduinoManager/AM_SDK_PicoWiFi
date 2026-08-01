@@ -793,6 +793,7 @@ void AMController::tcp_server_err(void *arg, err_t err)
       {
          pico->deviceDisconnected();
       }
+      pico->cache->clear();
       return;
    }
    if (err != ERR_ABRT)
