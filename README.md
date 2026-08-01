@@ -5,6 +5,9 @@ This C++ library is designed to interface with the Arduino Manager app on iOS an
  * Supported Boards: Pico W & Pico 2 W
  * Protocol: WiFi
 
+__This version introduces a caching mechanism that sends only changed values to Arduino Manager, reducing both the number of transmitted messages and network bandwidth usage.__
+
+
 ## Arduino Manager
 
 Arduino Manager allows you to control and receive data from any Arduino or Arduino compatible microcontroller and Raspberry Pico. It provides:
@@ -33,7 +36,7 @@ https://github.com/carlk3/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
     - Project Name: [Project Name]
     - Board Type: Pico W or Pico 2 W
     - Location: any folder of choice
-    - Pico SDK Version: 2.1.0 or greater
+    - Pico SDK Version: 2.3.0 or greater
     - Stdio Support: Console over UART, Console over USB or both, depending on your setup
     - Wireless Options: Pico W onboard LED
     - Generate C++ code
@@ -125,7 +128,7 @@ IP4_ADDR(&gateway, 192, 168, 1, 1);
 git clone --recurse-submodules https://github.com/ArduinoManager/AM_SDK_PicoWiFi.git
 git clone --recurse-submodules https://github.com/carlk3/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico.git
 cd no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
-git switch --detach tags/v3.5.1
+git switch --detach tags/v3.6.2
 ```
 6) From the Raspberry Pico extension select Configure CMake
 
